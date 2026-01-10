@@ -1,661 +1,3829 @@
 <!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>MathMaster 🧠</title>
-  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet" />
-  <style>
-    /* Reset & Base Styles */
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
+  <title>Learnify Pro - AI Learning Platform</title>
 
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- Lottie Player -->
+  <script src="https://unpkg.com/@lottiefiles/lottie-player@latest/dist/lottie-player.js"></script>
+
+  <!-- Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet" />
+
+  <!-- Font Awesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+
+  <!-- Markdown & Sanitize -->
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/dompurify@3.1.6/dist/purify.min.js"></script>
+
+  <!-- MathJax -->
+  <script>
+    window.MathJax = {
+      tex: { inlineMath: [['$', '$'], ['\\(', '\\)']] },
+      svg: { fontCache: 'global' }
+    };
+  </script>
+  <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
+
+  <style>
+    :root {
+      --text-primary: #ffffff;
+      --text-secondary: #d1d5db;
+      --bg-primary: #0f172a;
+      --bg-secondary: #1e293b;
+      --accent-primary: #7c3aed;
+      --accent-secondary: #ec4899;
+      --card-bg: rgba(30, 41, 59, 0.6);
+      --feature-card-bg: rgba(50, 60, 80, 0.4);
+    }
+    .dark {
+      --text-primary: #ffffff;
+      --text-secondary: #d1d5db;
+      --bg-primary: #0f172a;
+      --bg-secondary: #1e293b;
+      --accent-primary: #7c3aed;
+      --accent-secondary: #ec4899;
+      --card-bg: rgba(30, 41, 59, 0.6);
+      --feature-card-bg: rgba(50, 60, 80, 0.4);
+    }
     body {
       font-family: 'Poppins', sans-serif;
-      background: #f0f2f5;
-      color: #333;
-      height: 100vh;
-      overflow: hidden;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      transition: background 0.5s ease;
+      background-color: var(--bg-primary);
+      color: var(--text-primary);
+      transition: all 0.3s ease;
     }
-
-    /* Loading Screen */
-    #loading-screen {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background: linear-gradient(45deg, #4a00e0, #8e2de2, #1d976c, #93f9b9);
-      background-size: 400% 400%;
-      animation: gradientShift 8s ease infinite;
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      align-items: center;
-      z-index: 1000;
-      color: white;
+    .card {
+      background-color: var(--card-bg);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 1rem;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+      padding: 1.5rem;
     }
-
-    @keyframes gradientShift {
-      0% { background-position: 0% 50%; }
-      50% { background-position: 100% 50%; }
-      100% { background-position: 0% 50%; }
+    .active-selection {
+      transform: scale(1.03);
+      box-shadow: 0 0 0 2px var(--accent-primary);
+      background-color: rgba(124, 58, 237, 0.1);
     }
-
-    .loader-orb {
-      width: 80px;
-      height: 80px;
-      background: rgba(255, 255, 255, 0.2);
-      border-radius: 50%;
-      box-shadow: 0 0 30px rgba(255, 255, 255, 0.4);
-      animation: pulse 2s infinite;
-      margin-bottom: 30px;
-    }
-
-    @keyframes pulse {
-      0% { transform: scale(1); opacity: 0.7; }
-      50% { transform: scale(1.1); opacity: 1; }
-      100% { transform: scale(1); opacity: 0.7; }
-    }
-
-    .loading-hint {
-      font-size: 1.5rem;
-      margin-top: 20px;
-      opacity: 0;
-      transition: opacity 0.5s ease;
-    }
-
-    /* Main App Container */
-    #app {
-      width: 100%;
-      max-width: 500px;
-      min-height: 100vh;
-      padding: 20px;
+    .page {
       display: none;
-      flex-direction: column;
-      align-items: center;
+    }
+    .page.active {
+      display: block;
+    }
+    .prose code, .prose pre {
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+    .disabled-btn {
+      opacity: 0.6;
+      cursor: not-allowed;
     }
 
-    /* General Buttons */
-    .btn {
-      padding: 14px 24px;
-      margin: 10px;
-      font-size: 1rem;
-      font-weight: 600;
-      border: none;
-      border-radius: 12px;
-      cursor: pointer;
-      transition: all 0.3s ease;
-      outline: none;
-    }
-
-    .btn-primary {
-      background: #6a11cb;
-      color: white;
-      box-shadow: 0 4px 15px rgba(106, 17, 203, 0.3);
-    }
-
-    .btn-primary:hover, .btn-primary:active {
-      background: #4a008f;
-      transform: translateY(-2px);
-      box-shadow: 0 6px 20px rgba(106, 17, 203, 0.4);
-    }
-
-    /* Welcome Screen */
-    .welcome-card {
-      background: white;
-      padding: 30px;
-      border-radius: 16px;
-      box-shadow: 0 10px 30px rgba(0,0,0,0.1);
-      width: 100%;
-      max-width: 400px;
-      text-align: center;
-    }
-
-    .welcome-card h2 {
-      margin-bottom: 20px;
-      color: #4a00e0;
-    }
-
-    .welcome-card input {
-      width: 100%;
-      padding: 14px;
-      margin: 15px 0;
-      border: 2px solid #ddd;
-      border-radius: 12px;
-      font-size: 1rem;
-      transition: border 0.3s;
-    }
-
-    .welcome-card input:focus {
-      border-color: #6a11cb;
-      outline: none;
-    }
-
-    /* Home Screen */
-    .greeting {
-      font-size: 1.8rem;
-      font-weight: 600;
-      color: #2c3e50;
-      margin-bottom: 10px;
-      text-align: center;
-    }
-
-    .score {
-      font-size: 1.2rem;
-      color: #6a11cb;
-      margin-bottom: 30px;
-    }
-
-    .level-grid {
-      display: grid;
-      grid-template-columns: 1fr;
-      gap: 16px;
-      width: 100%;
-    }
-
-    @media (min-width: 600px) {
-      .level-grid {
-        grid-template-columns: repeat(2, 1fr);
-      }
-    }
-
-    .level-card {
-      background: white;
-      padding: 20px;
-      border-radius: 16px;
-      text-align: center;
-      box-shadow: 0 6px 20px rgba(0,0,0,0.08);
-      transition: all 0.3s ease;
-      cursor: pointer;
-    }
-
-    .level-card:hover {
-      transform: translateY(-5px);
-      box-shadow: 0 12px 30px rgba(0,0,0,0.15);
-    }
-
-    .level-card i {
+    #welcome-title {
       font-size: 2.5rem;
-      margin-bottom: 10px;
-      color: #6a11cb;
+      font-weight: 900;
+      letter-spacing: -0.5px;
+      background: linear-gradient(to right, #7c3aed, #ec4899);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      color: transparent;
     }
 
-    .level-card h3 {
-      margin-bottom: 8px;
-      color: #2c3e50;
+    .feature-card {
+      background-color: var(--feature-card-bg);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 0.75rem;
+      padding: 1rem;
+      transition: all 0.2s ease;
     }
-
-    .level-card p {
-      font-size: 0.9rem;
-      color: #7f8c8d;
+    .feature-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
     }
-
-    /* Quiz Screen */
-    .quiz-card {
-      background: white;
-      padding: 30px;
-      border-radius: 16px;
-      box-shadow: 0 10px 30px rgba(0,0,0,0.1);
-      width: 100%;
-      max-width: 400px;
-      text-align: center;
-      margin-bottom: 20px;
+    .feature-card i {
+      font-size: 2rem;
+      display: block;
+      margin: 0 auto 0.5rem;
+      color: #a78bfa;
     }
-
-    .question {
+    .feature-card h3 {
+      font-weight: bold;
+      color: var(--text-primary);
+      margin: 0.5rem 0;
+    }
+    .feature-card p {
+      color: var(--text-secondary);
+      font-size: 0.875rem;
+      margin: 0;
+    }
+    
+    .tab-btn.active {
+      border-bottom: 2px solid var(--accent-primary);
+      color: var(--text-primary);
+    }
+    
+    .progress-bar {
+      height: 6px;
+      background-color: rgba(255, 255, 255, 0.1);
+      border-radius: 3px;
+      overflow: hidden;
+    }
+    
+    .progress-fill {
+      height: 100%;
+      background: linear-gradient(to right, #7c3aed, #ec4899);
+      border-radius: 3px;
+      transition: width 0.3s ease;
+    }
+    
+    .subject-icon {
       font-size: 1.5rem;
-      font-weight: 600;
-      color: #2c3e50;
-      margin-bottom: 20px;
+      margin-bottom: 0.5rem;
     }
-
-    .options-grid {
-      display: grid;
-      grid-template-columns: 1fr;
-      gap: 12px;
+    
+    .dashboard-card {
+      background-color: var(--card-bg);
+      border-radius: 1rem;
+      padding: 1.5rem;
+      margin-bottom: 1.5rem;
+      transition: all 0.2s ease;
     }
-
-    @media (min-width: 500px) {
-      .options-grid {
-        grid-template-columns: repeat(2, 1fr);
-      }
+    
+    .dashboard-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
     }
-
-    .option {
-      padding: 14px;
-      background: #f8f9fa;
-      border: 2px solid #e9ecef;
-      border-radius: 12px;
+    
+    .quiz-option {
+      background-color: var(--feature-card-bg);
+      border-radius: 0.75rem;
+      padding: 1rem;
+      margin-bottom: 0.75rem;
       cursor: pointer;
       transition: all 0.2s ease;
     }
-
-    .option:hover {
-      background: #e9ecef;
+    
+    .quiz-option:hover {
+      background-color: rgba(124, 58, 237, 0.1);
     }
-
-    .option.correct {
-      background: #d4edda;
-      border-color: #c3e6cb;
-      animation: pulseGreen 0.5s ease;
+    
+    .quiz-option.selected {
+      background-color: rgba(124, 58, 237, 0.2);
+      border: 1px solid var(--accent-primary);
     }
-
-    .option.incorrect {
-      background: #f8d7da;
-      border-color: #f5c6cb;
-      animation: shakeRed 0.5s ease;
+    
+    .quiz-correct {
+      background-color: rgba(34, 197, 94, 0.2);
+      border: 1px solid #10b981;
     }
-
-    @keyframes pulseGreen {
-      0% { transform: scale(1); }
-      50% { transform: scale(1.05); background: #c3e6cb; }
-      100% { transform: scale(1); }
+    
+    .quiz-incorrect {
+      background-color: rgba(239, 68, 68, 0.2);
+      border: 1px solid #ef4444;
     }
-
-    @keyframes shakeRed {
-      0%, 100% { transform: translateX(0); }
-      25% { transform: translateX(-5px); }
-      75% { transform: translateX(5px); }
+    
+    .flip-card {
+      perspective: 1000px;
+      height: 200px;
     }
-
-    /* Summary Screen */
-    .summary-modal {
+    
+    .flip-card-inner {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      text-align: center;
+      transition: transform 0.6s;
+      transform-style: preserve-3d;
+    }
+    
+    .flip-card.flipped .flip-card-inner {
+      transform: rotateY(180deg);
+    }
+    
+    .flip-card-front, .flip-card-back {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      -webkit-backface-visibility: hidden;
+      backface-visibility: hidden;
+      border-radius: 0.75rem;
+      padding: 1.5rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+    }
+    
+    .flip-card-front {
+      background-color: var(--feature-card-bg);
+    }
+    
+    .flip-card-back {
+      background-color: var(--card-bg);
+      transform: rotateY(180deg);
+    }
+    
+    .note-card, .flashcard-item {
+      background-color: var(--feature-card-bg);
+      border-radius: 0.75rem;
+      padding: 1rem;
+      margin-bottom: 1rem;
+      position: relative;
+      transition: all 0.2s ease;
+    }
+    
+    .note-card:hover, .flashcard-item:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+    }
+    
+    .delete-btn {
+      position: absolute;
+      top: 0.5rem;
+      right: 0.5rem;
+      background: none;
+      border: none;
+      color: var(--text-secondary);
+      cursor: pointer;
+    }
+    
+    .delete-btn:hover {
+      color: #ef4444;
+    }
+    
+    .ai-generator {
+      background: linear-gradient(to right, rgba(124, 58, 237, 0.1), rgba(236, 72, 153, 0.1));
+      border: 1px solid rgba(124, 58, 237, 0.3);
+    }
+    
+    .lab-container {
+      background-color: var(--feature-card-bg);
+      border-radius: 0.75rem;
+      padding: 1.5rem;
+      margin-bottom: 1rem;
+    }
+    
+    .lab-controls {
+      display: flex;
+      gap: 0.5rem;
+      margin-bottom: 1rem;
+    }
+    
+    .lab-controls button {
+      background-color: var(--card-bg);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 0.5rem;
+      padding: 0.5rem 1rem;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    
+    .lab-controls button:hover {
+      background-color: rgba(124, 58, 237, 0.1);
+    }
+    
+    .lab-canvas {
+      background-color: rgba(0, 0, 0, 0.2);
+      border-radius: 0.5rem;
+      margin-bottom: 1rem;
+    }
+    
+    .history-item {
+      background-color: var(--feature-card-bg);
+      border-radius: 0.75rem;
+      padding: 1rem;
+      margin-bottom: 1rem;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    
+    .history-item:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+    }
+    
+    .step-container {
+      display: flex;
+      align-items: flex-start;
+      margin-bottom: 1rem;
+    }
+    
+    .step-number {
+      background: linear-gradient(to right, #7c3aed, #ec4899);
+      color: white;
+      width: 30px;
+      height: 30px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-right: 1rem;
+      flex-shrink: 0;
+    }
+    
+    .step-content {
+      flex: 1;
+    }
+    
+    .ascii-art {
+      font-family: monospace;
+      white-space: pre;
+      background-color: rgba(0, 0, 0, 0.2);
+      padding: 1rem;
+      border-radius: 0.5rem;
+      overflow-x: auto;
+    }
+    
+    .study-plan-day {
+      background-color: var(--feature-card-bg);
+      border-radius: 0.75rem;
+      padding: 1rem;
+      margin-bottom: 1rem;
+    }
+    
+    .hidden {
+      display: none;
+    }
+    
+    /* Back button styling */
+    .back-btn {
+      position: absolute;
+      top: 1rem;
+      left: 1rem;
+      background: rgba(30, 41, 59, 0.8);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      color: var(--text-primary);
+      padding: 0.5rem 1rem;
+      border-radius: 0.5rem;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      z-index: 10;
+    }
+    
+    .back-btn:hover {
+      background: rgba(30, 41, 59, 1);
+      transform: translateY(-1px);
+    }
+    
+    /* Image upload area styling */
+    .image-upload-area {
+      border: 2px dashed rgba(255, 255, 255, 0.3);
+      border-radius: 0.75rem;
+      padding: 2rem;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+    
+    .image-upload-area:hover {
+      border-color: var(--accent-primary);
+      background-color: rgba(124, 58, 237, 0.05);
+    }
+    
+    .image-upload-area.dragover {
+      border-color: var(--accent-primary);
+      background-color: rgba(124, 58, 237, 0.1);
+    }
+    
+    .camera-modal {
       position: fixed;
       top: 0;
       left: 0;
       width: 100%;
       height: 100%;
-      background: rgba(0,0,0,0.7);
+      background-color: rgba(0, 0, 0, 0.9);
       display: flex;
-      justify-content: center;
+      flex-direction: column;
       align-items: center;
-      z-index: 100;
+      justify-content: center;
+      z-index: 1000;
     }
-
-    .summary-card {
-      background: white;
-      padding: 30px;
-      border-radius: 16px;
-      width: 90%;
-      max-width: 400px;
-      text-align: center;
-      box-shadow: 0 20px 50px rgba(0,0,0,0.2);
-    }
-
-    .summary-card h2 {
-      margin-bottom: 10px;
-      color: #2c3e50;
-    }
-
-    .summary-card p {
-      font-size: 1.1rem;
-      margin-bottom: 20px;
-      color: #555;
+    
+    .camera-video {
+      max-width: 90%;
+      max-height: 70%;
+      border-radius: 0.5rem;
     }
   </style>
 </head>
-<body>
+<body class="text-gray-800 dark:text-gray-100">
 
-  <!-- LOADING SCREEN -->
-  <div id="loading-screen">
-    <div class="loader-orb"></div>
-    <div class="loading-hint" id="loading-hint">7 + 5 = ?</div>
-  </div>
+  <button id="theme-toggle" class="fixed top-4 right-4 z-50 bg-white dark:bg-gray-700 p-2 rounded-full shadow-md">
+    <svg id="theme-icon" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
+    </svg>
+  </button>
 
-  <!-- MAIN APP -->
-  <div id="app">
-    <!-- Welcome Screen -->
-    <div id="welcome-screen" class="welcome-card">
-      <h2>Welcome to MathMaster!</h2>
-      <p>Enter your name to get started.</p>
-      <input type="text" id="name-input" placeholder="Your name" />
-      <button class="btn btn-primary" id="continue-btn">Continue</button>
+  <main class="min-h-screen flex items-center justify-center p-6">
+    <div class="w-full max-w-4xl mx-auto">
+
+      <!-- Welcome Page -->
+      <section id="welcome-page" class="page active text-center">
+        <h1 id="welcome-title" class="mt-8">Learnify Pro</h1>
+        <p class="text-sm text-purple-300 mt-2">By Thakur Digital – Advanced Learning Solutions</p>
+        <p class="text-xs text-purple-300 italic">"Your 24/7 AI-Powered Study Companion"</p>
+
+        <div class="flex justify-center mt-6 mb-6">
+          <lottie-player 
+            src="https://assets7.lottiefiles.com/packages/lf20_3rwasyjy.json" 
+            background="transparent" 
+            speed="1" 
+            style="width: 280px; height: 280px;" 
+            loop 
+            autoplay>
+          </lottie-player>
+        </div>
+
+        <h2 class="text-2xl font-bold text-white mb-2">AI Learning Platform</h2>
+        <p class="text-gray-300 text-sm mb-8">Get instant solutions, explanations, and learning resources</p>
+
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6 px-4">
+          <div class="feature-card">
+            <i class="fas fa-pen-nib"></i>
+            <h3>Homework Helper</h3>
+            <p>Solve problems step-by-step</p>
+          </div>
+          <div class="feature-card">
+            <i class="fas fa-brain"></i>
+            <h3>Practice Tests</h3>
+            <p>Test your knowledge</p>
+          </div>
+          <div class="feature-card">
+            <i class="fas fa-book"></i>
+            <h3>Study Notes</h3>
+            <p>Create & organize notes</p>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-4 gap-4 mb-8 px-4">
+          <div class="feature-card">
+            <i class="fas fa-flask"></i>
+            <h3>Virtual Labs</h3>
+          </div>
+          <div class="feature-card">
+            <i class="fas fa-chart-bar"></i>
+            <h3>Progress Tracking</h3>
+          </div>
+          <div class="feature-card">
+            <i class="fas fa-language"></i>
+            <h3>Language Tools</h3>
+          </div>
+          <div class="feature-card">
+            <i class="fas fa-save"></i>
+            <h3>Save History</h3>
+          </div>
+        </div>
+
+        <button id="get-started-btn" class="mt-4 bg-gradient-to-r from-purple-600 to-pink-500 text-white font-bold py-3 px-8 rounded-full shadow-lg hover:from-purple-700 hover:to-pink-600 transition-all duration-200 transform hover:scale-105">
+          Get Started
+        </button>
+        <p class="text-gray-400 text-xs mt-2">No login required</p>
+      </section>
+
+      <!-- Dashboard Page -->
+      <section id="dashboard-page" class="page hidden">
+        <h2 class="text-2xl font-bold text-center mb-6">Learning Dashboard</h2>
+        
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+          <div class="dashboard-card">
+            <h3 class="text-lg font-bold mb-4">Quick Actions</h3>
+            <div class="grid grid-cols-2 gap-4">
+              <button class="feature-card text-center p-4" data-action="homework">
+                <i class="fas fa-pen-nib"></i>
+                <h3>Homework</h3>
+              </button>
+              <button class="feature-card text-center p-4" data-action="practice">
+                <i class="fas fa-brain"></i>
+                <h3>Practice</h3>
+              </button>
+              <button class="feature-card text-center p-4" data-action="notes">
+                <i class="fas fa-book"></i>
+                <h3>Notes</h3>
+              </button>
+              <button class="feature-card text-center p-4" data-action="flashcards">
+                <i class="fas fa-layer-group"></i>
+                <h3>Flashcards</h3>
+              </button>
+            </div>
+          </div>
+          
+          <div class="dashboard-card">
+            <h3 class="text-lg font-bold mb-4">AI Learning Tools</h3>
+            <div class="grid grid-cols-2 gap-3">
+              <button class="feature-card text-center p-3" data-action="ai-rewriter">
+                <i class="fas fa-sync-alt"></i>
+                <h3 class="text-sm">Question Rewriter</h3>
+              </button>
+              <button class="feature-card text-center p-3" data-action="notes-to-quiz">
+                <i class="fas fa-file-alt"></i>
+                <h3 class="text-sm">Notes to Quiz</h3>
+              </button>
+              <button class="feature-card text-center p-3" data-action="explain-simple">
+                <i class="fas fa-child"></i>
+                <h3 class="text-sm">Explain Simply</h3>
+              </button>
+              <button class="feature-card text-center p-3" data-action="step-by-step">
+                <i class="fas fa-list-ol"></i>
+                <h3 class="text-sm">Step-by-Step</h3>
+              </button>
+              <button class="feature-card text-center p-3" data-action="study-planner">
+                <i class="fas fa-calendar-alt"></i>
+                <h3 class="text-sm">Study Planner</h3>
+              </button>
+              <button class="feature-card text-center p-3" data-action="definition-drawing">
+                <i class="fas fa-paint-brush"></i>
+                <h3 class="text-sm">Visualize</h3>
+              </button>
+              <button class="feature-card text-center p-3" data-action="formula-finder">
+                <i class="fas fa-square-root-alt"></i>
+                <h3 class="text-sm">Formula Finder</h3>
+              </button>
+              <button class="feature-card text-center p-3" data-action="concept-explorer">
+                <i class="fas fa-lightbulb"></i>
+                <h3 class="text-sm">Concept Explorer</h3>
+              </button>
+            </div>
+          </div>
+        </div>
+        
+        <div class="dashboard-card">
+          <h3 class="text-lg font-bold mb-4">Learning Progress</h3>
+          <div id="progress-container" class="space-y-4">
+            <div>
+              <div class="flex justify-between mb-1">
+                <span class="text-sm">Mathematics</span>
+                <span class="text-sm">0%</span>
+              </div>
+              <div class="progress-bar">
+                <div class="progress-fill" style="width: 0%"></div>
+              </div>
+            </div>
+            <div>
+              <div class="flex justify-between mb-1">
+                <span class="text-sm">Science</span>
+                <span class="text-sm">0%</span>
+              </div>
+              <div class="progress-bar">
+                <div class="progress-fill" style="width: 0%"></div>
+              </div>
+            </div>
+            <div>
+              <div class="flex justify-between mb-1">
+                <span class="text-sm">English</span>
+                <span class="text-sm">0%</span>
+              </div>
+              <div class="progress-bar">
+                <div class="progress-fill" style="width: 0%"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Additional Features Section -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mt-6">
+          <button class="dashboard-card text-center" data-action="virtual-labs">
+            <i class="fas fa-flask text-2xl mb-2"></i>
+            <h3>Virtual Labs</h3>
+            <p class="text-sm text-gray-400">Interactive experiments</p>
+          </button>
+          <button class="dashboard-card text-center" data-action="language-tools">
+            <i class="fas fa-language text-2xl mb-2"></i>
+            <h3>Language Tools</h3>
+            <p class="text-sm text-gray-400">Translation & grammar</p>
+          </button>
+          <button class="dashboard-card text-center" data-action="save-history">
+            <i class="fas fa-save text-2xl mb-2"></i>
+            <h3>Save History</h3>
+            <p class="text-sm text-gray-400">Review past work</p>
+          </button>
+        </div>
+      </section>
+
+      <!-- Homework Flow -->
+      <!-- Subject & Class Page -->
+      <section id="subject-page" class="page hidden">
+        <button class="back-btn" data-back="dashboard-page">← Back</button>
+        <h2 class="text-2xl font-bold text-center mb-6">Choose Subject</h2>
+        <div class="grid grid-cols-2 sm:grid-cols-3 gap-4 mb-6">
+          <div class="subject-card card text-center cursor-pointer p-4" data-subject="Mathematics">
+            <div class="subject-icon">🧮</div>
+            Mathematics
+          </div>
+          <div class="subject-card card text-center cursor-pointer p-4" data-subject="Science">
+            <div class="subject-icon">🔬</div>
+            Science
+          </div>
+          <div class="subject-card card text-center cursor-pointer p-4" data-subject="English">
+            <div class="subject-icon">📚</div>
+            English
+          </div>
+          <div class="subject-card card text-center cursor-pointer p-4" data-subject="Nepali">
+            <div class="subject-icon">🇳🇵</div>
+            Nepali
+          </div>
+          <div class="subject-card card text-center cursor-pointer p-4" data-subject="Social Studies">
+            <div class="subject-icon">🌍</div>
+            Social Studies
+          </div>
+          <div class="subject-card card text-center cursor-pointer p-4" data-subject="General Knowledge">
+            <div class="subject-icon">🧠</div>
+            G.K.
+          </div>
+          <div class="subject-card card text-center cursor-pointer p-4" data-subject="Physics">
+            <div class="subject-icon">⚛️</div>
+            Physics
+          </div>
+          <div class="subject-card card text-center cursor-pointer p-4" data-subject="Chemistry">
+            <div class="subject-icon">🧪</div>
+            Chemistry
+          </div>
+          <div class="subject-card card text-center cursor-pointer p-4" data-subject="Biology">
+            <div class="subject-icon">🧫</div>
+            Biology
+          </div>
+          <div class="subject-card card text-center cursor-pointer p-4" data-subject="Computer Science">
+            <div class="subject-icon">💻</div>
+            CS
+          </div>
+          <div class="subject-card card text-center cursor-pointer p-4" data-subject="Geography">
+            <div class="subject-icon">🗺️</div>
+            Geography
+          </div>
+          <div class="subject-card card text-center cursor-pointer p-4" data-subject="History">
+            <div class="subject-icon">📜</div>
+            History
+          </div>
+        </div>
+        <h3 class="text-center font-medium mb-3">Select Class</h3>
+        <div id="class-chips" class="flex flex-wrap justify-center gap-2 mb-6"></div>
+        <button id="continue-btn" class="w-full py-3 bg-blue-600 text-white rounded-full disabled-btn">Continue</button>
+      </section>
+
+      <!-- Method Page -->
+      <section id="method-page" class="page hidden">
+        <button class="back-btn" data-back="subject-page">← Back</button>
+        <h2 class="text-2xl font-bold text-center mb-6">How to Solve?</h2>
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
+          <div class="method-card card text-center cursor-pointer p-6" data-method="Text">✍️<br><strong>Text Input</strong></div>
+          <div class="method-card card text-center cursor-pointer p-6" data-method="Image">📷<br><strong>Image Upload</strong></div>
+          <div class="method-card card text-center cursor-pointer p-6" data-method="Voice">🎤<br><strong>Voice Question</strong></div>
+        </div>
+        <button id="start-btn" class="w-full py-3 bg-blue-600 text-white rounded-full disabled-btn">Select Method</button>
+      </section>
+
+      <!-- Question Input Page -->
+      <section id="question-page" class="page hidden">
+        <button class="back-btn" data-back="method-page">← Back</button>
+        <h2 class="text-2xl font-bold text-center mb-6">Ask Your Question</h2>
+
+        <div id="text-input-container" class="hidden">
+          <textarea id="question-text" class="w-full p-3 rounded bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700" rows="5" placeholder="Type your question..."></textarea>
+          <div class="flex justify-end mt-2">
+            <button id="clear-text-btn" class="text-xs bg-gray-200 dark:bg-gray-700 px-2 py-1 rounded">🗑️ Clear</button>
+          </div>
+        </div>
+
+        <div id="image-input-container" class="hidden">
+          <div class="image-upload-area" id="image-upload-area">
+            <div class="text-4xl mb-4">📁</div>
+            <h3 class="text-lg font-bold mb-2">Upload Image</h3>
+            <p class="text-sm text-gray-400 mb-4">Click to upload or use camera</p>
+            <div class="flex justify-center gap-4">
+              <button id="upload-btn" class="bg-blue-500 text-white px-4 py-2 rounded-lg">📁 Upload File</button>
+              <button id="camera-btn" class="bg-green-600 text-white px-4 py-2 rounded-lg">📸 Open Camera</button>
+            </div>
+            <input type="file" id="image-upload" accept="image/*" class="hidden" />
+          </div>
+
+          <div id="camera-modal" class="camera-modal hidden">
+            <video id="camera-video" class="camera-video" autoplay></video>
+            <div class="flex gap-4 mt-4">
+              <button id="take-photo-btn" class="bg-red-600 text-white px-6 py-2 rounded-full">📷 Take Photo</button>
+              <button id="close-camera-btn" class="bg-gray-500 text-white px-6 py-2 rounded-lg">❌ Close</button>
+            </div>
+          </div>
+
+          <div id="image-preview" class="mt-4 hidden">
+            <div class="card">
+              <h3 class="text-lg font-bold mb-2">Image Preview</h3>
+              <img id="preview-img" class="max-w-full h-auto rounded mx-auto" src="" alt="Preview" />
+              <div class="flex justify-center gap-3 mt-4">
+                <button id="remove-image-btn" class="bg-red-500 text-white px-4 py-2 rounded">🗑️ Remove</button>
+                <button id="retake-image-btn" class="bg-gray-500 text-white px-4 py-2 rounded">📷 Retake</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div id="voice-input-container" class="hidden">
+          <div class="card text-center p-6">
+            <div class="text-4xl mb-4">🎤</div>
+            <h3 class="text-lg font-bold mb-2">Voice Recording</h3>
+            <p class="text-sm text-gray-400 mb-4">Click to speak your question</p>
+            <button id="record-btn" class="bg-purple-600 text-white px-6 py-3 rounded-full text-lg">🔴 Start Recording</button>
+            <div id="recording-status" class="mt-4 hidden text-red-500">
+              <i class="fas fa-circle animate-pulse mr-2"></i> Recording...
+            </div>
+          </div>
+        </div>
+
+        <button id="submit-btn" class="mt-6 w-full py-3 bg-gradient-to-r from-emerald-500 to-blue-500 text-white font-bold rounded-full disabled-btn">
+          🚀 Submit Question
+        </button>
+      </section>
+
+      <!-- Results Page -->
+      <section id="results-page" class="page hidden">
+        <button class="back-btn" data-back="question-page">← Back</button>
+        <h2 class="text-2xl font-bold text-center mb-2">Solution</h2>
+        <p id="question-display" class="text-sm text-center text-gray-500 mb-4"></p>
+
+        <div id="loading-container" class="text-center p-6">
+          <lottie-player src="https://assets4.lottiefiles.com/packages/lf20_tutvdkg0.json" background="transparent" speed="1" class="w-40 h-40 mx-auto"></lottie-player>
+          <p class="text-lg font-medium mt-4 text-gray-700 dark:text-gray-300">Thinking deeply...</p>
+        </div>
+
+        <div id="results-container" class="hidden">
+          <div class="flex border-b mb-4">
+            <button class="tab-btn px-4 py-2 font-medium active" data-tab="solution">Solution</button>
+            <button class="tab-btn px-4 py-2 text-gray-500" data-tab="explanation">Explanation</button>
+            <button class="tab-btn px-4 py-2 text-gray-500" data-tab="resources">Resources</button>
+          </div>
+          <div id="solution-tab" class="prose prose-invert max-w-none"></div>
+          <div id="explanation-tab" class="prose prose-invert max-w-none hidden"></div>
+          <div id="resources-tab" class="prose prose-invert max-w-none hidden"></div>
+
+          <div class="mt-6 grid grid-cols-2 gap-3">
+            <button id="new-question-btn" class="card text-center py-2">🔄 New Question</button>
+            <button id="save-solution-btn" class="card text-center py-2">💾 Save</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- Practice Tests Page -->
+      <section id="practice-page" class="page hidden">
+        <button class="back-btn" data-back="dashboard-page">← Back</button>
+        <h2 class="text-2xl font-bold text-center mb-6">Practice Tests</h2>
+        
+        <div class="card mb-6">
+          <h3 class="text-lg font-bold mb-4">Select Practice Test</h3>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div class="practice-test-card card text-center cursor-pointer p-4" data-test="math-basic">
+              <div class="subject-icon">🧮</div>
+              <h4>Basic Mathematics</h4>
+              <p class="text-sm text-gray-400">10 questions • 15 minutes</p>
+            </div>
+            <div class="practice-test-card card text-center cursor-pointer p-4" data-test="science-basic">
+              <div class="subject-icon">🔬</div>
+              <h4>Basic Science</h4>
+              <p class="text-sm text-gray-400">10 questions • 15 minutes</p>
+            </div>
+            <div class="practice-test-card card text-center cursor-pointer p-4" data-test="english-grammar">
+              <div class="subject-icon">📚</div>
+              <h4>English Grammar</h4>
+              <p class="text-sm text-gray-400">15 questions • 20 minutes</p>
+            </div>
+            <div class="practice-test-card card text-center cursor-pointer p-4" data-test="general-knowledge">
+              <div class="subject-icon">🧠</div>
+              <h4>General Knowledge</h4>
+              <p class="text-sm text-gray-400">20 questions • 25 minutes</p>
+            </div>
+          </div>
+        </div>
+        
+        <div id="practice-test-container" class="hidden">
+          <div class="card mb-4">
+            <div class="flex justify-between items-center mb-4">
+              <h3 id="practice-test-title" class="text-lg font-bold">Practice Test</h3>
+              <div class="flex items-center">
+                <span id="practice-timer" class="bg-purple-600 text-white px-3 py-1 rounded-full">15:00</span>
+              </div>
+            </div>
+            <div id="practice-progress" class="progress-bar mb-4">
+              <div id="practice-progress-fill" class="progress-fill" style="width: 0%"></div>
+            </div>
+          </div>
+          
+          <div id="practice-question-container" class="space-y-4"></div>
+          
+          <div class="mt-6 flex justify-between">
+            <button id="prev-question-btn" class="bg-gray-600 text-white px-4 py-2 rounded disabled-btn">Previous</button>
+            <button id="next-question-btn" class="bg-purple-600 text-white px-4 py-2 rounded">Next Question</button>
+            <button id="finish-test-btn" class="bg-green-600 text-white px-4 py-2 rounded hidden">Finish Test</button>
+          </div>
+        </div>
+        
+        <div id="practice-results-container" class="hidden">
+          <div class="card text-center p-6">
+            <h3 class="text-xl font-bold mb-4">Test Results</h3>
+            <div class="text-4xl font-bold mb-2" id="practice-score">0%</div>
+            <p id="practice-result-message" class="mb-4">You scored 0 out of 0 questions correctly.</p>
+            <div class="grid grid-cols-2 gap-4 mb-4">
+              <div class="card p-3">
+                <div class="text-sm text-gray-400">Correct Answers</div>
+                <div class="text-2xl font-bold" id="correct-answers">0</div>
+              </div>
+              <div class="card p-3">
+                <div class="text-sm text-gray-400">Time Taken</div>
+                <div class="text-2xl font-bold" id="time-taken">0:00</div>
+              </div>
+            </div>
+            <button id="retake-test-btn" class="bg-purple-600 text-white px-4 py-2 rounded mr-2">Retake Test</button>
+            <button id="review-test-btn" class="bg-blue-600 text-white px-4 py-2 rounded">Review Answers</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- Study Notes Page -->
+      <section id="notes-page" class="page hidden">
+        <button class="back-btn" data-back="dashboard-page">← Back</button>
+        <h2 class="text-2xl font-bold text-center mb-6">Study Notes</h2>
+        
+        <div class="card mb-6">
+          <div class="flex justify-between items-center mb-4">
+            <h3 class="text-lg font-bold">My Notes</h3>
+            <div>
+              <button id="add-note-btn" class="bg-purple-600 text-white px-4 py-2 rounded mr-2">+ Add Note Manually</button>
+              <button id="ai-note-btn" class="ai-generator text-white px-4 py-2 rounded">+ AI Note Maker</button>
+            </div>
+          </div>
+          
+          <div id="notes-list" class="space-y-4">
+            <!-- Notes will be dynamically added here -->
+          </div>
+          
+          <div id="empty-notes" class="text-center p-6">
+            <i class="fas fa-sticky-note text-4xl text-gray-400 mb-4"></i>
+            <h3 class="text-xl font-bold mb-2">No Notes Yet</h3>
+            <p class="text-gray-400 mb-4">Create your first note to get started!</p>
+          </div>
+        </div>
+        
+        <!-- Manual Note Editor -->
+        <div id="note-editor-container" class="hidden">
+          <div class="card mb-4">
+            <div class="flex justify-between items-center mb-4">
+              <h3 id="note-editor-title" class="text-lg font-bold">New Note</h3>
+              <div>
+                <button id="save-note-btn" class="bg-green-600 text-white px-4 py-2 rounded mr-2">Save Note</button>
+                <button id="cancel-note-btn" class="bg-gray-600 text-white px-4 py-2 rounded">Cancel</button>
+              </div>
+            </div>
+            
+            <div class="mb-4">
+              <input type="text" id="note-title" class="w-full p-3 rounded bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700" placeholder="Note Title">
+            </div>
+            
+            <div class="mb-4">
+              <select id="note-subject" class="w-full p-3 rounded bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700">
+                <option value="">Select Subject</option>
+                <option value="Mathematics">Mathematics</option>
+                <option value="Science">Science</option>
+                <option value="English">English</option>
+                <option value="History">History</option>
+                <option value="Geography">Geography</option>
+                <option value="Computer Science">Computer Science</option>
+              </select>
+            </div>
+            
+            <div>
+              <textarea id="note-content" class="w-full p-3 rounded bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700" rows="10" placeholder="Write your note here..."></textarea>
+            </div>
+          </div>
+        </div>
+        
+        <!-- AI Note Maker -->
+        <div id="ai-note-container" class="hidden">
+          <div class="card mb-4">
+            <div class="flex justify-between items-center mb-4">
+              <h3 class="text-lg font-bold">AI Note Maker</h3>
+              <button id="cancel-ai-note-btn" class="bg-gray-600 text-white px-4 py-2 rounded">Cancel</button>
+            </div>
+            
+            <div class="mb-4">
+              <input type="text" id="ai-note-topic" class="w-full p-3 rounded bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700" placeholder="Enter topic for AI to create notes...">
+            </div>
+            
+            <div class="mb-4">
+              <select id="ai-note-subject" class="w-full p-3 rounded bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700">
+                <option value="">Select Subject</option>
+                <option value="Mathematics">Mathematics</option>
+                <option value="Science">Science</option>
+                <option value="English">English</option>
+                <option value="History">History</option>
+                <option value="Geography">Geography</option>
+                <option value="Computer Science">Computer Science</option>
+              </select>
+            </div>
+            
+            <div class="mb-4">
+              <select id="ai-note-level" class="w-full p-3 rounded bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700">
+                <option value="basic">Basic Level</option>
+                <option value="intermediate" selected>Intermediate Level</option>
+                <option value="advanced">Advanced Level</option>
+              </select>
+            </div>
+            
+            <div class="flex justify-end">
+              <button id="generate-ai-note-btn" class="ai-generator text-white px-4 py-2 rounded">Generate Notes with AI</button>
+            </div>
+          </div>
+          
+          <div id="ai-note-loading" class="hidden text-center p-6">
+            <lottie-player src="https://assets4.lottiefiles.com/packages/lf20_tutvdkg0.json" background="transparent" speed="1" class="w-20 h-20 mx-auto"></lottie-player>
+            <p class="text-sm mt-2">AI is creating your notes...</p>
+          </div>
+          
+          <div id="ai-note-results" class="hidden">
+            <div class="card mb-4">
+              <h3 class="text-lg font-bold mb-4">AI Generated Notes</h3>
+              <div id="ai-note-content" class="prose prose-invert max-w-none"></div>
+            </div>
+            
+            <div class="flex justify-end">
+              <button id="save-ai-note-btn" class="bg-green-600 text-white px-4 py-2 rounded">Save AI Notes</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Flashcards Page -->
+      <section id="flashcards-page" class="page hidden">
+        <button class="back-btn" data-back="dashboard-page">← Back</button>
+        <h2 class="text-2xl font-bold text-center mb-6">Study Flashcards</h2>
+        
+        <div class="card mb-6">
+          <div class="flex justify-between items-center mb-4">
+            <h3 class="text-lg font-bold">My Flashcards</h3>
+            <div>
+              <button id="add-flashcard-btn" class="bg-purple-600 text-white px-4 py-2 rounded mr-2">+ Add Flashcard Manually</button>
+              <button id="ai-flashcard-btn" class="ai-generator text-white px-4 py-2 rounded">+ AI Flashcard Maker</button>
+            </div>
+          </div>
+          
+          <div id="flashcards-list" class="space-y-4">
+            <!-- Flashcards will be dynamically added here -->
+          </div>
+          
+          <div id="empty-flashcards" class="text-center p-6">
+            <i class="fas fa-layer-group text-4xl text-gray-400 mb-4"></i>
+            <h3 class="text-xl font-bold mb-2">No Flashcards Yet</h3>
+            <p class="text-gray-400 mb-4">Create your first flashcard to get started!</p>
+          </div>
+        </div>
+        
+        <!-- Manual Flashcard Editor -->
+        <div id="flashcard-editor-container" class="hidden">
+          <div class="card mb-4">
+            <div class="flex justify-between items-center mb-4">
+              <h3 id="flashcard-editor-title" class="text-lg font-bold">New Flashcard</h3>
+              <div>
+                <button id="save-flashcard-btn" class="bg-green-600 text-white px-4 py-2 rounded mr-2">Save Flashcard</button>
+                <button id="cancel-flashcard-btn" class="bg-gray-600 text-white px-4 py-2 rounded">Cancel</button>
+              </div>
+            </div>
+            
+            <div class="mb-4">
+              <select id="flashcard-subject" class="w-full p-3 rounded bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700">
+                <option value="">Select Subject</option>
+                <option value="Mathematics">Mathematics</option>
+                <option value="Science">Science</option>
+                <option value="English">English</option>
+                <option value="History">History</option>
+                <option value="Geography">Geography</option>
+                <option value="Computer Science">Computer Science</option>
+              </select>
+            </div>
+            
+            <div class="mb-4">
+              <input type="text" id="flashcard-front" class="w-full p-3 rounded bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700" placeholder="Front of card (question or term)">
+            </div>
+            
+            <div>
+              <textarea id="flashcard-back" class="w-full p-3 rounded bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700" rows="5" placeholder="Back of card (answer or definition)"></textarea>
+            </div>
+          </div>
+        </div>
+        
+        <!-- AI Flashcard Maker -->
+        <div id="ai-flashcard-container" class="hidden">
+          <div class="card mb-4">
+            <div class="flex justify-between items-center mb-4">
+              <h3 class="text-lg font-bold">AI Flashcard Maker</h3>
+              <button id="cancel-ai-flashcard-btn" class="bg-gray-600 text-white px-4 py-2 rounded">Cancel</button>
+            </div>
+            
+            <div class="mb-4">
+              <input type="text" id="ai-flashcard-topic" class="w-full p-3 rounded bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700" placeholder="Enter topic for AI to create flashcards...">
+            </div>
+            
+            <div class="mb-4">
+              <select id="ai-flashcard-subject" class="w-full p-3 rounded bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700">
+                <option value="">Select Subject</option>
+                <option value="Mathematics">Mathematics</option>
+                <option value="Science">Science</option>
+                <option value="English">English</option>
+                <option value="History">History</option>
+                <option value="Geography">Geography</option>
+                <option value="Computer Science">Computer Science</option>
+              </select>
+            </div>
+            
+            <div class="mb-4">
+              <select id="ai-flashcard-count" class="w-full p-3 rounded bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700">
+                <option value="3">3 Flashcards</option>
+                <option value="5" selected>5 Flashcards</option>
+                <option value="10">10 Flashcards</option>
+              </select>
+            </div>
+            
+            <div class="flex justify-end">
+              <button id="generate-ai-flashcards-btn" class="ai-generator text-white px-4 py-2 rounded">Generate Flashcards with AI</button>
+            </div>
+          </div>
+          
+          <div id="ai-flashcard-loading" class="hidden text-center p-6">
+            <lottie-player src="https://assets4.lottiefiles.com/packages/lf20_tutvdkg0.json" background="transparent" speed="1" class="w-20 h-20 mx-auto"></lottie-player>
+            <p class="text-sm mt-2">AI is creating your flashcards...</p>
+          </div>
+          
+          <div id="ai-flashcard-results" class="hidden">
+            <div class="card mb-4">
+              <h3 class="text-lg font-bold mb-4">AI Generated Flashcards</h3>
+              <div id="ai-flashcard-content" class="space-y-4"></div>
+            </div>
+            
+            <div class="flex justify-end">
+              <button id="save-ai-flashcards-btn" class="bg-green-600 text-white px-4 py-2 rounded">Save All Flashcards</button>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Flashcard Study Mode -->
+        <div id="flashcard-study-container" class="hidden">
+          <div class="card text-center p-6">
+            <h3 class="text-lg font-bold mb-4">Study Flashcards</h3>
+            <div class="flip-card mb-6" id="study-flashcard">
+              <div class="flip-card-inner">
+                <div class="flip-card-front card flex flex-col justify-center">
+                  <h4 id="flashcard-study-front" class="text-xl font-bold mb-4">Flashcard Front</h4>
+                  <p class="text-sm text-gray-400">Click to flip</p>
+                </div>
+                <div class="flip-card-back card flex flex-col justify-center">
+                  <h4 id="flashcard-study-back" class="text-xl font-bold mb-4">Flashcard Back</h4>
+                  <p class="text-sm text-gray-400">Click to flip</p>
+                </div>
+              </div>
+            </div>
+            
+            <div class="flex justify-between mb-4">
+              <span id="flashcard-progress">Card 1 of 10</span>
+              <div>
+                <button id="mark-known-btn" class="bg-green-600 text-white px-3 py-1 rounded text-sm mr-2">I Know This</button>
+                <button id="mark-review-btn" class="bg-yellow-600 text-white px-3 py-1 rounded text-sm">Need Review</button>
+              </div>
+            </div>
+            
+            <div class="flex justify-between">
+              <button id="prev-flashcard-btn" class="bg-gray-600 text-white px-4 py-2 rounded">Previous</button>
+              <button id="next-flashcard-btn" class="bg-purple-600 text-white px-4 py-2 rounded">Next</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Virtual Labs Page -->
+      <section id="virtual-labs-page" class="page hidden">
+        <button class="back-btn" data-back="dashboard-page">← Back</button>
+        <h2 class="text-2xl font-bold text-center mb-6">Virtual Labs</h2>
+        
+        <div class="card mb-6">
+          <h3 class="text-lg font-bold mb-4">Available Labs</h3>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div class="lab-card card text-center cursor-pointer p-4" data-lab="physics-pendulum">
+              <div class="subject-icon">⚛️</div>
+              <h4>Pendulum Lab</h4>
+              <p class="text-sm text-gray-400">Study pendulum motion</p>
+            </div>
+            <div class="lab-card card text-center cursor-pointer p-4" data-lab="chemistry-reactions">
+              <div class="subject-icon">🧪</div>
+              <h4>Chemical Reactions</h4>
+              <p class="text-sm text-gray-400">Explore chemical changes</p>
+            </div>
+            <div class="lab-card card text-center cursor-pointer p-4" data-lab="biology-microscope">
+              <div class="subject-icon">🧫</div>
+              <h4>Virtual Microscope</h4>
+              <p class="text-sm text-gray-400">Examine microscopic organisms</p>
+            </div>
+            <div class="lab-card card text-center cursor-pointer p-4" data-lab="math-geometry">
+              <div class="subject-icon">🧮</div>
+              <h4>Geometry Explorer</h4>
+              <p class="text-sm text-gray-400">Interactive geometry tools</p>
+            </div>
+          </div>
+        </div>
+        
+        <div id="lab-container" class="hidden">
+          <div class="card mb-4">
+            <div class="flex justify-between items-center mb-4">
+              <h3 id="lab-title" class="text-lg font-bold">Virtual Lab</h3>
+              <button id="reset-lab-btn" class="bg-gray-600 text-white px-4 py-2 rounded">Reset Lab</button>
+            </div>
+            
+            <div class="lab-controls mb-4">
+              <!-- Lab controls will be dynamically added here -->
+            </div>
+            
+            <div class="lab-canvas text-center p-4" id="lab-canvas">
+              <!-- Lab visualization will be dynamically added here -->
+            </div>
+            
+            <div id="lab-data" class="mt-4">
+              <!-- Lab data will be dynamically added here -->
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Language Tools Page -->
+      <section id="language-tools-page" class="page hidden">
+        <button class="back-btn" data-back="dashboard-page">← Back</button>
+        <h2 class="text-2xl font-bold text-center mb-6">Language Tools</h2>
+        
+        <div class="card mb-6">
+          <h3 class="text-lg font-bold mb-4">Translation</h3>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+            <div>
+              <label class="block text-sm font-medium mb-2">From Language</label>
+              <select id="translate-from" class="w-full p-3 rounded bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700">
+                <option value="en">English</option>
+                <option value="ne">Nepali</option>
+                <option value="hi">Hindi</option>
+                <option value="es">Spanish</option>
+                <option value="fr">French</option>
+                <option value="de">German</option>
+                <option value="zh">Chinese</option>
+                <option value="ja">Japanese</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-sm font-medium mb-2">To Language</label>
+              <select id="translate-to" class="w-full p-3 rounded bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700">
+                <option value="ne">Nepali</option>
+                <option value="en">English</option>
+                <option value="hi">Hindi</option>
+                <option value="es">Spanish</option>
+                <option value="fr">French</option>
+                <option value="de">German</option>
+                <option value="zh">Chinese</option>
+                <option value="ja">Japanese</option>
+              </select>
+            </div>
+          </div>
+          
+          <div class="mb-4">
+            <textarea id="translate-input" class="w-full p-3 rounded bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700" rows="3" placeholder="Enter text to translate"></textarea>
+          </div>
+          
+          <div class="flex justify-end">
+            <button id="translate-btn" class="bg-purple-600 text-white px-4 py-2 rounded">Translate</button>
+          </div>
+          
+          <div id="translate-result" class="mt-4 hidden">
+            <label class="block text-sm font-medium mb-2">Translation</label>
+            <div class="p-3 rounded bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700" id="translated-text"></div>
+          </div>
+        </div>
+        
+        <div class="card">
+          <h3 class="text-lg font-bold mb-4">Grammar Checker</h3>
+          <div class="mb-4">
+            <textarea id="grammar-input" class="w-full p-3 rounded bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700" rows="5" placeholder="Enter text to check grammar"></textarea>
+          </div>
+          
+          <div class="flex justify-end">
+            <button id="check-grammar-btn" class="bg-purple-600 text-white px-4 py-2 rounded">Check Grammar</button>
+          </div>
+          
+          <div id="grammar-result" class="mt-4 hidden">
+            <label class="block text-sm font-medium mb-2">Corrected Text</label>
+            <div class="p-3 rounded bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700" id="corrected-text"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Save History Page -->
+      <section id="save-history-page" class="page hidden">
+        <button class="back-btn" data-back="dashboard-page">← Back</button>
+        <h2 class="text-2xl font-bold text-center mb-6">Save History</h2>
+        
+        <div class="card">
+          <div class="flex justify-between items-center mb-4">
+            <h3 class="text-lg font-bold">Saved Items</h3>
+            <button id="clear-history-btn" class="bg-red-600 text-white px-4 py-2 rounded">Clear All History</button>
+          </div>
+          
+          <div id="history-list" class="space-y-4">
+            <!-- History items will be dynamically added here -->
+          </div>
+          
+          <div id="empty-history" class="text-center p-6">
+            <i class="fas fa-history text-4xl text-gray-400 mb-4"></i>
+            <h3 class="text-xl font-bold mb-2">No Saved Items</h3>
+            <p class="text-gray-400 mb-4">Your saved solutions and notes will appear here.</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- AI Tools Pages -->
+      <!-- AI Question Rewriter Page -->
+      <section id="ai-rewriter-page" class="page hidden">
+        <button class="back-btn" data-back="dashboard-page">← Back</button>
+        <h2 class="text-2xl font-bold text-center mb-6">AI Question Rewriter</h2>
+        <p class="text-center text-gray-400 mb-6">Paste a question and get new practice versions</p>
+        
+        <div class="card mb-6">
+          <textarea id="rewriter-input" class="w-full p-3 rounded bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700" rows="5" placeholder="Paste your question here..."></textarea>
+          <div class="flex justify-between mt-3">
+            <button id="clear-rewriter-btn" class="text-sm bg-gray-200 dark:bg-gray-700 px-3 py-1 rounded">Clear</button>
+            <button id="generate-rewrites-btn" class="text-sm bg-gradient-to-r from-purple-600 to-pink-500 text-white px-4 py-1 rounded">Generate Variations</button>
+          </div>
+        </div>
+        
+        <div id="rewriter-loading" class="hidden text-center p-6">
+          <lottie-player src="https://assets4.lottiefiles.com/packages/lf20_tutvdkg0.json" background="transparent" speed="1" class="w-20 h-20 mx-auto"></lottie-player>
+          <p class="text-sm mt-2">AI is rewriting your question...</p>
+        </div>
+        
+        <div id="rewriter-results" class="hidden">
+          <h3 class="text-lg font-bold mb-4">Practice Question Variations</h3>
+          <div id="rewritten-questions" class="space-y-4"></div>
+        </div>
+      </section>
+
+      <!-- Notes to Quiz Converter Page -->
+      <section id="notes-to-quiz-page" class="page hidden">
+        <button class="back-btn" data-back="dashboard-page">← Back</button>
+        <h2 class="text-2xl font-bold text-center mb-6">Notes to Quiz Converter</h2>
+        <p class="text-center text-gray-400 mb-6">Paste your notes and get multiple-choice quiz questions</p>
+        
+        <div class="card mb-6">
+          <textarea id="notes-quiz-input" class="w-full p-3 rounded bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700" rows="5" placeholder="Paste your notes here..."></textarea>
+          <div class="flex justify-between mt-3">
+            <button id="clear-notes-quiz-btn" class="text-sm bg-gray-200 dark:bg-gray-700 px-3 py-1 rounded">Clear</button>
+            <button id="generate-quiz-btn" class="text-sm bg-gradient-to-r from-purple-600 to-pink-500 text-white px-4 py-1 rounded">Generate Quiz</button>
+          </div>
+        </div>
+        
+        <div id="notes-quiz-loading" class="hidden text-center p-6">
+          <lottie-player src="https://assets4.lottiefiles.com/packages/lf20_tutvdkg0.json" background="transparent" speed="1" class="w-20 h-20 mx-auto"></lottie-player>
+          <p class="text-sm mt-2">AI is creating quiz questions...</p>
+        </div>
+        
+        <div id="notes-quiz-results" class="hidden">
+          <h3 class="text-lg font-bold mb-4">Generated Quiz Questions</h3>
+          <div id="quiz-questions" class="space-y-6"></div>
+        </div>
+      </section>
+
+      <!-- Explain Like I'm 5 Page -->
+      <section id="explain-simple-page" class="page hidden">
+        <button class="back-btn" data-back="dashboard-page">← Back</button>
+        <h2 class="text-2xl font-bold text-center mb-6">Explain Like I'm 5</h2>
+        <p class="text-center text-gray-400 mb-6">Get super-simple explanations of complex topics</p>
+        
+        <div class="card mb-6">
+          <textarea id="explain-simple-input" class="w-full p-3 rounded bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700" rows="5" placeholder="What would you like explained simply?"></textarea>
+          <div class="flex justify-between mt-3">
+            <button id="clear-explain-btn" class="text-sm bg-gray-200 dark:bg-gray-700 px-3 py-1 rounded">Clear</button>
+            <button id="generate-explanation-btn" class="text-sm bg-gradient-to-r from-purple-600 to-pink-500 text-white px-4 py-1 rounded">Explain Simply</button>
+          </div>
+        </div>
+        
+        <div id="explain-simple-loading" class="hidden text-center p-6">
+          <lottie-player src="https://assets4.lottiefiles.com/packages/lf20_tutvdkg0.json" background="transparent" speed="1" class="w-20 h-20 mx-auto"></lottie-player>
+          <p class="text-sm mt-2">AI is preparing a simple explanation...</p>
+        </div>
+        
+        <div id="explain-simple-results" class="hidden">
+          <h3 class="text-lg font-bold mb-4">Simple Explanation</h3>
+          <div class="card p-4 bg-yellow-100 dark:bg-yellow-900 text-yellow-900 dark:text-yellow-100">
+            <div id="simple-explanation" class="prose prose-invert max-w-none"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Step-by-Step Visuals Page -->
+      <section id="step-by-step-page" class="page hidden">
+        <button class="back-btn" data-back="dashboard-page">← Back</button>
+        <h2 class="text-2xl font-bold text-center mb-6">Step-by-Step Visuals</h2>
+        <p class="text-center text-gray-400 mb-6">Break down complex problems into simple steps</p>
+        
+        <div class="card mb-6">
+          <textarea id="step-by-step-input" class="w-full p-3 rounded bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700" rows="5" placeholder="Enter a problem or concept to break down..."></textarea>
+          <div class="flex justify-between mt-3">
+            <button id="clear-steps-btn" class="text-sm bg-gray-200 dark:bg-gray-700 px-3 py-1 rounded">Clear</button>
+            <button id="generate-steps-btn" class="text-sm bg-gradient-to-r from-purple-600 to-pink-500 text-white px-4 py-1 rounded">Generate Steps</button>
+          </div>
+        </div>
+        
+        <div id="step-by-step-loading" class="hidden text-center p-6">
+          <lottie-player src="https://assets4.lottiefiles.com/packages/lf20_tutvdkg0.json" background="transparent" speed="1" class="w-20 h-20 mx-auto"></lottie-player>
+          <p class="text-sm mt-2">AI is breaking it down into steps...</p>
+        </div>
+        
+        <div id="step-by-step-results" class="hidden">
+          <h3 class="text-lg font-bold mb-4">Step-by-Step Breakdown</h3>
+          <div id="steps-container" class="space-y-4"></div>
+        </div>
+      </section>
+
+      <!-- AI Study Planner Page -->
+      <section id="study-planner-page" class="page hidden">
+        <button class="back-btn" data-back="dashboard-page">← Back</button>
+        <h2 class="text-2xl font-bold text-center mb-6">AI Study Planner</h2>
+        <p class="text-center text-gray-400 mb-6">Enter your exam date and get a personalized study schedule</p>
+        
+        <div class="card mb-6">
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+            <div>
+              <label class="block text-sm font-medium mb-2">Exam Date</label>
+              <input type="date" id="exam-date" class="w-full p-2 rounded bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700">
+            </div>
+            <div>
+              <label class="block text-sm font-medium mb-2">Subject/Topic</label>
+              <input type="text" id="study-topic" class="w-full p-2 rounded bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700" placeholder="e.g., Algebra, Biology">
+            </div>
+          </div>
+          <div class="mb-4">
+            <label class="block text-sm font-medium mb-2">Study Hours Per Day</label>
+            <select id="study-hours" class="w-full p-2 rounded bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700">
+              <option value="1">1 hour</option>
+              <option value="2" selected>2 hours</option>
+              <option value="3">3 hours</option>
+              <option value="4">4 hours</option>
+            </select>
+          </div>
+          <div class="flex justify-end">
+            <button id="generate-plan-btn" class="text-sm bg-gradient-to-r from-purple-600 to-pink-500 text-white px-4 py-2 rounded">Generate Study Plan</button>
+          </div>
+        </div>
+        
+        <div id="study-planner-loading" class="hidden text-center p-6">
+          <lottie-player src="https://assets4.lottiefiles.com/packages/lf20_tutvdkg0.json" background="transparent" speed="1" class="w-20 h-20 mx-auto"></lottie-player>
+          <p class="text-sm mt-2">AI is creating your study plan...</p>
+        </div>
+        
+        <div id="study-planner-results" class="hidden">
+          <h3 class="text-lg font-bold mb-4">Your Study Plan</h3>
+          <div id="study-plan-container" class="space-y-4"></div>
+        </div>
+      </section>
+
+      <!-- Definition to Drawing Page -->
+      <section id="definition-drawing-page" class="page hidden">
+        <button class="back-btn" data-back="dashboard-page">← Back</button>
+        <h2 class="text-2xl font-bold text-center mb-6">Definition to Drawing</h2>
+        <p class="text-center text-gray-400 mb-6">Turn concepts into simple diagrams or ASCII sketches</p>
+        
+        <div class="card mb-6">
+          <textarea id="definition-input" class="w-full p-3 rounded bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700" rows="5" placeholder="Enter a concept or definition to visualize..."></textarea>
+          <div class="flex justify-between mt-3">
+            <button id="clear-definition-btn" class="text-sm bg-gray-200 dark:bg-gray-700 px-3 py-1 rounded">Clear</button>
+            <button id="generate-drawing-btn" class="text-sm bg-gradient-to-r from-purple-600 to-pink-500 text-white px-4 py-1 rounded">Generate Visual</button>
+          </div>
+        </div>
+        
+        <div id="definition-drawing-loading" class="hidden text-center p-6">
+          <lottie-player src="https://assets4.lottiefiles.com/packages/lf20_tutvdkg0.json" background="transparent" speed="1" class="w-20 h-20 mx-auto"></lottie-player>
+          <p class="text-sm mt-2">AI is creating a visual representation...</p>
+        </div>
+        
+        <div id="definition-drawing-results" class="hidden">
+          <h3 class="text-lg font-bold mb-4">Visual Representation</h3>
+          <div class="card p-4 text-center">
+            <div id="drawing-container" class="ascii-art"></div>
+            <p class="text-sm text-gray-500 mt-2">ASCII representation of the concept</p>
+          </div>
+          <div id="drawing-explanation" class="mt-4 prose prose-invert max-w-none"></div>
+        </div>
+      </section>
+
+      <!-- NEW: Formula Finder Page -->
+      <section id="formula-finder-page" class="page hidden">
+        <button class="back-btn" data-back="dashboard-page">← Back</button>
+        <h2 class="text-2xl font-bold text-center mb-6">Formula Finder</h2>
+        <p class="text-center text-gray-400 mb-6">Enter a concept and get relevant formulas, units, and examples</p>
+        
+        <div class="card mb-6">
+          <textarea id="formula-input" class="w-full p-3 rounded bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700" rows="5" placeholder="Enter a concept (e.g., force, acceleration, area, velocity)..."></textarea>
+          <div class="flex justify-between mt-3">
+            <button id="clear-formula-btn" class="text-sm bg-gray-200 dark:bg-gray-700 px-3 py-1 rounded">Clear</button>
+            <button id="generate-formulas-btn" class="text-sm bg-gradient-to-r from-purple-600 to-pink-500 text-white px-4 py-1 rounded">Find Formulas</button>
+          </div>
+        </div>
+        
+        <div id="formula-finder-loading" class="hidden text-center p-6">
+          <lottie-player src="https://assets4.lottiefiles.com/packages/lf20_tutvdkg0.json" background="transparent" speed="1" class="w-20 h-20 mx-auto"></lottie-player>
+          <p class="text-sm mt-2">AI is finding relevant formulas...</p>
+        </div>
+        
+        <div id="formula-finder-results" class="hidden">
+          <h3 class="text-lg font-bold mb-4">Relevant Formulas</h3>
+          <div id="formulas-container" class="space-y-4"></div>
+        </div>
+      </section>
+
+      <!-- NEW: Concept Explorer Page -->
+      <section id="concept-explorer-page" class="page hidden">
+        <button class="back-btn" data-back="dashboard-page">← Back</button>
+        <h2 class="text-2xl font-bold text-center mb-6">Concept Explorer</h2>
+        <p class="text-center text-gray-400 mb-6">Deep dive into any concept with detailed explanations and connections</p>
+        
+        <div class="card mb-6">
+          <textarea id="concept-input" class="w-full p-3 rounded bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700" rows="5" placeholder="Enter a concept to explore (e.g., photosynthesis, gravity, algebra)..."></textarea>
+          <div class="flex justify-between mt-3">
+            <button id="clear-concept-btn" class="text-sm bg-gray-200 dark:bg-gray-700 px-3 py-1 rounded">Clear</button>
+            <button id="explore-concept-btn" class="text-sm bg-gradient-to-r from-purple-600 to-pink-500 text-white px-4 py-1 rounded">Explore Concept</button>
+          </div>
+        </div>
+        
+        <div id="concept-explorer-loading" class="hidden text-center p-6">
+          <lottie-player src="https://assets4.lottiefiles.com/packages/lf20_tutvdkg0.json" background="transparent" speed="1" class="w-20 h-20 mx-auto"></lottie-player>
+          <p class="text-sm mt-2">AI is exploring the concept...</p>
+        </div>
+        
+        <div id="concept-explorer-results" class="hidden">
+          <h3 class="text-lg font-bold mb-4">Concept Exploration</h3>
+          <div id="concept-container" class="space-y-4"></div>
+        </div>
+      </section>
+
     </div>
-
-    <!-- Home Screen -->
-    <div id="home-screen" style="display:none;width:100%">
-      <h2 class="greeting" id="greeting">Hello, User!</h2>
-      <div class="score" id="total-score">Score: 0</div>
-      <div class="level-grid">
-        <div class="level-card" data-level="addition">
-          <i>➕</i>
-          <h3>Addition</h3>
-          <p>Test your adding skills</p>
-        </div>
-        <div class="level-card" data-level="subtraction">
-          <i>➖</i>
-          <h3>Subtraction</h3>
-          <p>Sharpen your subtraction</p>
-        </div>
-        <div class="level-card" data-level="multiplication">
-          <i>✖️</i>
-          <h3>Multiplication</h3>
-          <p>Master the times tables</p>
-        </div>
-        <div class="level-card" data-level="division">
-          <i>➗</i>
-          <h3>Division</h3>
-          <p>Divide and conquer</p>
-        </div>
-        <div class="level-card" data-level="algebra">
-          <i>🟰</i>
-          <h3>Algebra</h3>
-          <p>Solve for x like a pro</p>
-        </div>
-      </div>
-    </div>
-
-    <!-- Quiz Screen -->
-    <div id="quiz-screen" style="display:none;width:100%">
-      <div class="quiz-card">
-        <div class="question" id="question">6 + 8 = ?</div>
-        <div class="options-grid" id="options-grid"></div>
-      </div>
-    </div>
-
-    <!-- Summary Screen -->
-    <div id="summary-screen" style="display:none;"></div>
-  </div>
+  </main>
 
   <script>
-    // IIFE to encapsulate the entire app
-    (function () {
-      // App state
-      const state = {
-        user: null,
-        score: 0,
-        currentLevel: '',
-        questions: [],
-        currentQuestionIndex: 0,
-        correctCount: 0,
-        totalQuestions: 10
-      };
+    // ✅ YOUR OPENROUTER API KEY
+    const API_KEY = "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";
+    const API_URL = "https://openrouter.ai/api/v1/chat/completions";
 
-      // DOM Elements
-      const $ = (selector) => document.querySelector(selector);
-      const $$ = (selector) => document.querySelectorAll(selector);
+    // Application State
+    const state = {
+      selectedSubject: null,
+      selectedClass: null,
+      selectedMethod: null,
+      currentQuestion: '',
+      questionImage: null,
+      theme: localStorage.getItem('theme') === 'dark' ? 'dark' : 'light',
+      notes: JSON.parse(localStorage.getItem('learnify-notes') || '[]'),
+      flashcards: JSON.parse(localStorage.getItem('learnify-flashcards') || '[]'),
+      practiceQuestions: [],
+      currentPracticeQuestion: 0,
+      practiceAnswers: [],
+      practiceTimer: null,
+      practiceTimeLeft: 600,
+      savedHistory: JSON.parse(localStorage.getItem('learnify-saved') || '[]'),
+      currentTest: null,
+      currentLab: null,
+      currentFlashcardSet: [],
+      currentFlashcardIndex: 0
+    };
 
-      // Math hints for loading screen
-      const mathHints = [
-        '7 + 5 = ?', '12 × 3 = ?', 'x + 4 = 9 → x=?',
-        '18 − 9 = ?', '36 ÷ 6 = ?', '5² = ?', '2x = 10 → x=?',
-        '9 × 7 = ?', '√64 = ?', '15 + ? = 23'
+    const $ = id => document.getElementById(id);
+
+    // Get all page elements
+    const pages = {
+      'welcome-page': $('welcome-page'),
+      'dashboard-page': $('dashboard-page'),
+      'subject-page': $('subject-page'),
+      'method-page': $('method-page'),
+      'question-page': $('question-page'),
+      'results-page': $('results-page'),
+      'practice-page': $('practice-page'),
+      'notes-page': $('notes-page'),
+      'flashcards-page': $('flashcards-page'),
+      'virtual-labs-page': $('virtual-labs-page'),
+      'language-tools-page': $('language-tools-page'),
+      'save-history-page': $('save-history-page'),
+      // NEW AI PAGES
+      'ai-rewriter-page': $('ai-rewriter-page'),
+      'notes-to-quiz-page': $('notes-to-quiz-page'),
+      'explain-simple-page': $('explain-simple-page'),
+      'step-by-step-page': $('step-by-step-page'),
+      'study-planner-page': $('study-planner-page'),
+      'definition-drawing-page': $('definition-drawing-page'),
+      // NEW PAGES
+      'formula-finder-page': $('formula-finder-page'),
+      'concept-explorer-page': $('concept-explorer-page')
+    };
+
+    function showPage(pageId) {
+      Object.values(pages).forEach(page => {
+        if (page) page.classList.remove('active');
+      });
+      if (pages[pageId]) {
+        pages[pageId].classList.add('active');
+      }
+      
+      // Load specific data when pages are shown
+      if (pageId === 'notes-page') {
+        loadNotes();
+      } else if (pageId === 'flashcards-page') {
+        loadFlashcards();
+      } else if (pageId === 'save-history-page') {
+        loadHistory();
+      }
+    }
+
+    // HOMEWORK FLOW FUNCTIONS
+    function createClassChips() {
+      const container = $('class-chips');
+      if (!container) return;
+      
+      container.innerHTML = '';
+      for (let i = 1; i <= 12; i++) {
+        const chip = document.createElement('button');
+        chip.className = 'class-chip bg-gray-100 dark:bg-gray-700 px-3 py-1 rounded-full text-sm';
+        chip.textContent = `Class ${i}`;
+        chip.dataset.class = i;
+        chip.addEventListener('click', () => {
+          document.querySelectorAll('.class-chip').forEach(c => c.classList.remove('active-selection'));
+          chip.classList.add('active-selection');
+          state.selectedClass = i;
+          updateButtonStates();
+        });
+        container.appendChild(chip);
+      }
+    }
+
+    function updateButtonStates() {
+      const continueBtn = $('continue-btn');
+      const startBtn = $('start-btn');
+      const submitBtn = $('submit-btn');
+      
+      if (continueBtn) {
+        continueBtn.classList.toggle('disabled-btn', !(state.selectedSubject && state.selectedClass));
+      }
+      
+      if (startBtn) {
+        startBtn.classList.toggle('disabled-btn', !state.selectedMethod);
+        startBtn.textContent = state.selectedMethod ? `Start with ${state.selectedMethod}` : 'Select Method';
+      }
+      
+      if (submitBtn) {
+        const hasInput = state.selectedMethod === 'Text' 
+          ? !!$('question-text')?.value.trim()
+          : state.selectedMethod === 'Image' 
+            ? !!state.questionImage 
+            : state.selectedMethod === 'Voice'
+              ? !!state.currentQuestion
+              : false;
+        submitBtn.classList.toggle('disabled-btn', !hasInput);
+      }
+    }
+
+    function fileToBase64(file) {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result.split(',')[1]);
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+      });
+    }
+
+    async function askGPT() {
+      const isMath = state.selectedSubject === "Mathematics";
+      const systemPrompt = `You are an expert AI tutor for Grade ${state.selectedClass} in ${state.selectedSubject}. Use simple, clear language.`;
+      
+      const userInstructions = `
+Respond ONLY with a valid JSON object (no markdown, no extra text). Use this exact format:
+{
+  "solution": "Clear answer (HTML-safe, may include <br>, <b>, etc.)",
+  "explanation": "Brief concept explanation in simple terms",
+  "resources": "<ul><li><a href='https://example.com'>Example Resource</a></li></ul>"
+}
+
+${isMath ? 'Provide step-by-step math solution.' : 'Ensure answer is curriculum-aligned and accurate.'}
+Do NOT include code blocks, extra commentary, or backticks.
+      `.trim();
+
+      const messages = [
+        { role: "system", content: systemPrompt },
+        { role: "user", content: [] }
       ];
 
-      // Show loading screen for 2.5s, then go to welcome/home
-      const loadingHint = $('#loading-hint');
-      let hintIndex = 0;
+      if (state.currentQuestion) {
+        messages[1].content.push({ type: "text", text: `Question: ${state.currentQuestion}` });
+      }
 
-      const updateHint = () => {
-        loadingHint.style.opacity = 0;
-        setTimeout(() => {
-          loadingHint.textContent = mathHints[hintIndex];
-          loadingHint.style.opacity = 1;
-          hintIndex = (hintIndex + 1) % mathHints.length;
-        }, 500);
+      if (state.questionImage) {
+        const base64 = await fileToBase64(state.questionImage);
+        messages[1].content.push({
+          type: "image_url",
+          image_url: { url: `data:${state.questionImage.type};base64,${base64}` }
+        });
+      }
+
+      messages[1].content.push({ type: "text", text: userInstructions });
+
+      const MODEL = state.questionImage ? "openai/gpt-4o" : "openai/gpt-3.5-turbo";
+
+      try {
+        const res = await fetch(API_URL, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${API_KEY}`,
+            "HTTP-Referer": window.location.href,
+            "X-Title": "Learnify Pro"
+          },
+          body: JSON.stringify({
+            model: MODEL,
+            messages: messages,
+            temperature: 0.3,
+            max_tokens: 1000
+          })
+        });
+
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error?.message || 'API request failed');
+        if (!data.choices?.[0]?.message?.content) return { success: false, error: 'No response from AI' };
+
+        const rawText = data.choices[0].message.content.trim();
+        console.log("Raw GPT Response:", rawText);
+
+        let jsonString = rawText;
+        const codeBlockMatch = rawText.match(/```(?:json)?\s*([\s\S]*?)\s*```/i);
+        if (codeBlockMatch) jsonString = codeBlockMatch[1].trim();
+        else {
+          const jsonMatch = rawText.match(/\{[\s\S]*\}/);
+          if (jsonMatch) jsonString = jsonMatch[0];
+          else return { success: false, error: 'No valid JSON in response' };
+        }
+
+        const parsed = JSON.parse(jsonString);
+        return { success: true, ...parsed };
+      } catch (err) {
+        console.error("Error calling GPT:", err);
+        return { success: false, error: `API Error: ${err.message}` };
+      }
+    }
+
+    function renderMarkdown(el, md) {
+      const html = DOMPurify.sanitize(marked.parse(md || ''));
+      el.innerHTML = html;
+      if (window.MathJax?.typesetPromise) MathJax.typesetPromise();
+    }
+
+    // IMAGE UPLOAD FUNCTIONALITY
+    function setupImageUpload() {
+      const uploadBtn = $('upload-btn');
+      const cameraBtn = $('camera-btn');
+      const fileInput = $('image-upload');
+      const cameraModal = $('camera-modal');
+      const cameraVideo = $('camera-video');
+      const takePhotoBtn = $('take-photo-btn');
+      const closeCameraBtn = $('close-camera-btn');
+      const previewImg = $('preview-img');
+      const imagePreview = $('image-preview');
+      const removeImageBtn = $('remove-image-btn');
+      const retakeImageBtn = $('retake-image-btn');
+      const imageUploadArea = $('image-upload-area');
+
+      let stream = null;
+
+      // Upload button click
+      if (uploadBtn) {
+        uploadBtn.onclick = () => {
+          fileInput.click();
+        };
+      }
+
+      // Camera button click
+      if (cameraBtn) {
+        cameraBtn.onclick = async () => {
+          if (cameraModal) cameraModal.classList.remove('hidden');
+          try {
+            stream = await navigator.mediaDevices.getUserMedia({ 
+              video: { 
+                facingMode: "environment",
+                width: { ideal: 1280 },
+                height: { ideal: 720 }
+              } 
+            });
+            if (cameraVideo) cameraVideo.srcObject = stream;
+          } catch (err) {
+            console.error("Camera access error:", err);
+            alert("Camera access denied: " + err.message);
+            if (cameraModal) cameraModal.classList.add('hidden');
+          }
+        };
+      }
+
+      // Close camera
+      if (closeCameraBtn) {
+        closeCameraBtn.onclick = () => {
+          if (stream) {
+            stream.getTracks().forEach(track => track.stop());
+            stream = null;
+          }
+          if (cameraModal) cameraModal.classList.add('hidden');
+        };
+      }
+
+      // Take photo
+      if (takePhotoBtn) {
+        takePhotoBtn.onclick = () => {
+          if (!cameraVideo) return;
+          
+          const canvas = document.createElement('canvas');
+          canvas.width = cameraVideo.videoWidth;
+          canvas.height = cameraVideo.videoHeight;
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(cameraVideo, 0, 0, canvas.width, canvas.height);
+
+          canvas.toBlob((blob) => {
+            const file = new File([blob], `photo-${Date.now()}.jpg`, { type: 'image/jpeg' });
+            state.questionImage = file;
+
+            const reader = new FileReader();
+            reader.onload = () => {
+              if (previewImg) previewImg.src = reader.result;
+              if (imagePreview) imagePreview.classList.remove('hidden');
+              updateButtonStates();
+            };
+            reader.readAsDataURL(file);
+          }, 'image/jpeg', 0.8);
+
+          if (stream) {
+            stream.getTracks().forEach(track => track.stop());
+            stream = null;
+          }
+          if (cameraModal) cameraModal.classList.add('hidden');
+        };
+      }
+
+      // File input change
+      if (fileInput) {
+        fileInput.onchange = (e) => {
+          const file = e.target.files[0];
+          if (file) {
+            handleImageFile(file);
+          }
+        };
+      }
+
+      // Drag and drop functionality
+      if (imageUploadArea) {
+        imageUploadArea.addEventListener('dragover', (e) => {
+          e.preventDefault();
+          imageUploadArea.classList.add('dragover');
+        });
+
+        imageUploadArea.addEventListener('dragleave', () => {
+          imageUploadArea.classList.remove('dragover');
+        });
+
+        imageUploadArea.addEventListener('drop', (e) => {
+          e.preventDefault();
+          imageUploadArea.classList.remove('dragover');
+          const files = e.dataTransfer.files;
+          if (files.length > 0) {
+            handleImageFile(files[0]);
+          }
+        });
+
+        // Click to upload
+        imageUploadArea.addEventListener('click', () => {
+          fileInput.click();
+        });
+      }
+
+      // Remove image
+      if (removeImageBtn) {
+        removeImageBtn.onclick = () => {
+          if (fileInput) fileInput.value = '';
+          if (imagePreview) imagePreview.classList.add('hidden');
+          state.questionImage = null;
+          updateButtonStates();
+        };
+      }
+
+      // Retake image
+      if (retakeImageBtn) {
+        retakeImageBtn.onclick = () => {
+          if (fileInput) fileInput.click();
+        };
+      }
+
+      function handleImageFile(file) {
+        // Check if file is an image
+        if (!file.type.match('image.*')) {
+          alert('Please select an image file (JPEG, PNG, etc.)');
+          return;
+        }
+
+        // Check file size (max 5MB)
+        if (file.size > 5 * 1024 * 1024) {
+          alert('Image size should be less than 5MB');
+          return;
+        }
+
+        state.questionImage = file;
+
+        const reader = new FileReader();
+        reader.onload = () => {
+          if (previewImg) previewImg.src = reader.result;
+          if (imagePreview) imagePreview.classList.remove('hidden');
+          updateButtonStates();
+        };
+        reader.readAsDataURL(file);
+      }
+    }
+
+    // PRACTICE TESTS IMPLEMENTATION
+    function initializePracticeTests() {
+      const practiceTests = {
+        'math-basic': {
+          title: 'Basic Mathematics',
+          time: 15 * 60,
+          questions: [
+            {
+              question: 'What is 15 + 27?',
+              options: ['32', '42', '52', '62'],
+              correct: 1
+            },
+            {
+              question: 'If a rectangle has length 8cm and width 5cm, what is its area?',
+              options: ['13 cm²', '26 cm²', '40 cm²', '45 cm²'],
+              correct: 2
+            },
+            {
+              question: 'What is 3/4 of 100?',
+              options: ['25', '50', '75', '100'],
+              correct: 2
+            }
+          ]
+        },
+        'science-basic': {
+          title: 'Basic Science',
+          time: 15 * 60,
+          questions: [
+            {
+              question: 'Which planet is known as the Red Planet?',
+              options: ['Venus', 'Mars', 'Jupiter', 'Saturn'],
+              correct: 1
+            },
+            {
+              question: 'What is the chemical symbol for gold?',
+              options: ['Go', 'Gd', 'Au', 'Ag'],
+              correct: 2
+            },
+            {
+              question: 'What gas do plants absorb from the atmosphere?',
+              options: ['Oxygen', 'Nitrogen', 'Carbon Dioxide', 'Hydrogen'],
+              correct: 2
+            }
+          ]
+        },
+        'english-grammar': {
+          title: 'English Grammar',
+          time: 20 * 60,
+          questions: [
+            {
+              question: 'Which sentence is grammatically correct?',
+              options: ['She don\'t like apples', 'She doesn\'t like apples', 'She doesn\'t likes apples', 'She don\'t likes apples'],
+              correct: 1
+            },
+            {
+              question: 'What is the plural of "child"?',
+              options: ['Childs', 'Children', 'Childes', 'Child'],
+              correct: 1
+            }
+          ]
+        },
+        'general-knowledge': {
+          title: 'General Knowledge',
+          time: 25 * 60,
+          questions: [
+            {
+              question: 'What is the capital of France?',
+              options: ['London', 'Berlin', 'Paris', 'Madrid'],
+              correct: 2
+            },
+            {
+              question: 'Who painted the Mona Lisa?',
+              options: ['Vincent van Gogh', 'Pablo Picasso', 'Leonardo da Vinci', 'Michelangelo'],
+              correct: 2
+            }
+          ]
+        }
       };
 
-      setInterval(updateHint, 2000);
-      updateHint();
+      document.querySelectorAll('.practice-test-card').forEach(card => {
+        card.addEventListener('click', function() {
+          const testId = this.getAttribute('data-test');
+          startPracticeTest(testId, practiceTests[testId]);
+        });
+      });
 
-      setTimeout(() => {
-        $('#loading-screen').style.opacity = 0;
-        setTimeout(() => {
-          $('#loading-screen').style.display = 'none';
-          initApp();
-        }, 500);
-      }, 2500);
+      $('prev-question-btn').addEventListener('click', function() {
+        if (state.currentPracticeQuestion > 0) {
+          state.currentPracticeQuestion--;
+          displayPracticeQuestion();
+        }
+      });
 
-      // Initialize the app
-      function initApp() {
-        $('#app').style.display = 'flex';
-
-        // Load user data from localStorage
-        const savedUser = localStorage.getItem('mathQuizUser');
-        const savedScore = localStorage.getItem('mathQuizScore');
-
-        if (savedUser) {
-          state.user = savedUser;
-          state.score = savedScore ? parseInt(savedScore) : 0;
-          showHomeScreen();
+      $('next-question-btn').addEventListener('click', function() {
+        if (state.currentPracticeQuestion < state.practiceQuestions.length - 1) {
+          state.currentPracticeQuestion++;
+          displayPracticeQuestion();
         } else {
-          showWelcomeScreen();
+          $('finish-test-btn').classList.remove('hidden');
+          $('next-question-btn').classList.add('hidden');
         }
+      });
 
-        setupEventListeners();
+      $('finish-test-btn').addEventListener('click', function() {
+        finishPracticeTest();
+      });
+
+      $('retake-test-btn').addEventListener('click', function() {
+        startPracticeTest(state.currentTest, practiceTests[state.currentTest]);
+      });
+
+      $('review-test-btn').addEventListener('click', function() {
+        $('practice-results-container').classList.add('hidden');
+        $('practice-test-container').classList.remove('hidden');
+        state.currentPracticeQuestion = 0;
+        displayPracticeQuestion();
+      });
+    }
+
+    function startPracticeTest(testId, testData) {
+      state.currentTest = testId;
+      state.practiceQuestions = testData.questions;
+      state.practiceAnswers = new Array(testData.questions.length).fill(null);
+      state.currentPracticeQuestion = 0;
+      state.practiceTimeLeft = testData.time;
+
+      $('practice-test-title').textContent = testData.title;
+      $('practice-test-container').classList.remove('hidden');
+      $('practice-results-container').classList.add('hidden');
+
+      $('prev-question-btn').classList.add('disabled-btn');
+      $('next-question-btn').classList.remove('hidden');
+      $('finish-test-btn').classList.add('hidden');
+
+      startPracticeTimer();
+      displayPracticeQuestion();
+    }
+
+    function startPracticeTimer() {
+      if (state.practiceTimer) {
+        clearInterval(state.practiceTimer);
       }
 
-      function showWelcomeScreen() {
-        $('#welcome-screen').style.display = 'block';
-        $('#home-screen').style.display = 'none';
-        $('#quiz-screen').style.display = 'none';
+      updateTimerDisplay();
+
+      state.practiceTimer = setInterval(() => {
+        state.practiceTimeLeft--;
+        updateTimerDisplay();
+
+        const totalTime = state.practiceQuestions.length * 60;
+        const timeUsed = totalTime - state.practiceTimeLeft;
+        const progressPercent = (timeUsed / totalTime) * 100;
+        $('practice-progress-fill').style.width = `${Math.min(progressPercent, 100)}%`;
+
+        if (state.practiceTimeLeft <= 0) {
+          clearInterval(state.practiceTimer);
+          finishPracticeTest();
+        }
+      }, 1000);
+    }
+
+    function updateTimerDisplay() {
+      const minutes = Math.floor(state.practiceTimeLeft / 60);
+      const seconds = state.practiceTimeLeft % 60;
+      $('practice-timer').textContent = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+    }
+
+    function displayPracticeQuestion() {
+      const question = state.practiceQuestions[state.currentPracticeQuestion];
+      const container = $('practice-question-container');
+      
+      const progressPercent = ((state.currentPracticeQuestion + 1) / state.practiceQuestions.length) * 100;
+      $('practice-progress-fill').style.width = `${progressPercent}%`;
+
+      $('prev-question-btn').classList.toggle('disabled-btn', state.currentPracticeQuestion === 0);
+      $('next-question-btn').classList.toggle('disabled-btn', state.currentPracticeQuestion === state.practiceQuestions.length - 1);
+
+      container.innerHTML = `
+        <div class="card">
+          <h4 class="text-lg font-bold mb-4">Question ${state.currentPracticeQuestion + 1} of ${state.practiceQuestions.length}</h4>
+          <p class="mb-4">${question.question}</p>
+          <div class="space-y-2">
+            ${question.options.map((option, index) => `
+              <div class="quiz-option ${state.practiceAnswers[state.currentPracticeQuestion] === index ? 'selected' : ''}" data-option="${index}">
+                <span class="font-bold">${String.fromCharCode(65 + index)}.</span> ${option}
+              </div>
+            `).join('')}
+          </div>
+        </div>
+      `;
+
+      container.querySelectorAll('.quiz-option').forEach(option => {
+        option.addEventListener('click', function() {
+          const selectedOption = parseInt(this.getAttribute('data-option'));
+          state.practiceAnswers[state.currentPracticeQuestion] = selectedOption;
+          
+          container.querySelectorAll('.quiz-option').forEach(opt => {
+            opt.classList.remove('selected');
+          });
+          this.classList.add('selected');
+        });
+      });
+    }
+
+    function finishPracticeTest() {
+      if (state.practiceTimer) {
+        clearInterval(state.practiceTimer);
+        state.practiceTimer = null;
       }
 
-      function showHomeScreen() {
-        $('#welcome-screen').style.display = 'none';
-        $('#quiz-screen').style.display = 'none';
-        $('#summary-screen').style.display = 'none';
-        $('#home-screen').style.display = 'block';
-        $('#greeting').textContent = `Hello, ${state.user}!`;
-        $('#total-score').textContent = `Score: ${state.score}`;
+      let correctCount = 0;
+      state.practiceQuestions.forEach((question, index) => {
+        if (state.practiceAnswers[index] === question.correct) {
+          correctCount++;
+        }
+      });
+
+      const score = (correctCount / state.practiceQuestions.length) * 100;
+      const timeTaken = state.practiceQuestions.length * 60 - state.practiceTimeLeft;
+      const minutes = Math.floor(timeTaken / 60);
+      const seconds = timeTaken % 60;
+
+      $('practice-score').textContent = `${Math.round(score)}%`;
+      $('correct-answers').textContent = `${correctCount} / ${state.practiceQuestions.length}`;
+      $('time-taken').textContent = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+      
+      let message = '';
+      if (score >= 90) {
+        message = 'Excellent work! You have mastered this topic.';
+      } else if (score >= 70) {
+        message = 'Good job! You have a solid understanding of this topic.';
+      } else if (score >= 50) {
+        message = 'Not bad! Keep practicing to improve your understanding.';
+      } else {
+        message = 'Keep studying! Review the material and try again.';
       }
+      $('practice-result-message').textContent = message;
 
-      function showQuizScreen() {
-        $('#home-screen').style.display = 'none';
-        $('#summary-screen').style.display = 'none';
-        $('#quiz-screen').style.display = 'block';
-        loadQuestion();
-      }
+      $('practice-test-container').classList.add('hidden');
+      $('practice-results-container').classList.remove('hidden');
+    }
 
-      function loadQuestion() {
-        const q = state.questions[state.currentQuestionIndex];
-        $('#question').textContent = q.question;
+    // NOTES MANAGEMENT
+    function loadNotes() {
+      const notesList = $('notes-list');
+      const emptyNotes = $('empty-notes');
+      
+      if (state.notes.length === 0) {
+        notesList.innerHTML = '';
+        emptyNotes.classList.remove('hidden');
+      } else {
+        emptyNotes.classList.add('hidden');
+        notesList.innerHTML = '';
+        
+        state.notes.forEach((note, index) => {
+          const noteElement = document.createElement('div');
+          noteElement.className = 'note-card';
+          noteElement.innerHTML = `
+            <h4 class="font-bold">${note.title}</h4>
+            <div class="flex justify-between text-sm text-gray-400 mb-2">
+              <span>${note.subject}</span>
+              <span>${note.date}</span>
+            </div>
+            <p class="text-sm">${note.content.substring(0, 100)}${note.content.length > 100 ? '...' : ''}</p>
+            <button class="delete-btn" data-index="${index}"><i class="fas fa-trash"></i></button>
+          `;
+          notesList.appendChild(noteElement);
+        });
 
-        const optionsGrid = $('#options-grid');
-        optionsGrid.innerHTML = '';
+        notesList.querySelectorAll('.delete-btn').forEach(button => {
+          button.addEventListener('click', function(e) {
+            e.stopPropagation();
+            const index = parseInt(this.getAttribute('data-index'));
+            deleteNote(index);
+          });
+        });
 
-        q.options.forEach(option => {
-          const div = document.createElement('div');
-          div.className = 'option';
-          div.textContent = option;
-          div.onclick = () => checkAnswer(option);
-          optionsGrid.appendChild(div);
+        notesList.querySelectorAll('.note-card').forEach((card, index) => {
+          card.addEventListener('click', function() {
+            viewNote(index);
+          });
         });
       }
+    }
 
-      function checkAnswer(selected) {
-        const q = state.questions[state.currentQuestionIndex];
-        const options = $$('.option');
-        const correct = q.answer;
+    function addNewNote() {
+      $('note-editor-title').textContent = 'New Note';
+      $('note-title').value = '';
+      $('note-subject').value = '';
+      $('note-content').value = '';
+      $('notes-list').classList.add('hidden');
+      $('note-editor-container').classList.remove('hidden');
+      $('ai-note-container').classList.add('hidden');
+    }
 
-        // Disable further clicks
-        options.forEach(opt => (opt.style.pointerEvents = 'none'));
+    function saveNote() {
+      const title = $('note-title').value.trim();
+      const subject = $('note-subject').value;
+      const content = $('note-content').value.trim();
+      
+      if (!title || !subject || !content) {
+        alert('Please fill in all fields.');
+        return;
+      }
+      
+      const note = {
+        title,
+        subject,
+        content,
+        date: new Date().toLocaleString()
+      };
+      
+      state.notes.unshift(note);
+      localStorage.setItem('learnify-notes', JSON.stringify(state.notes));
+      
+      $('note-editor-container').classList.add('hidden');
+      $('notes-list').classList.remove('hidden');
+      loadNotes();
+    }
 
-        let isCorrect = selected === correct;
+    function deleteNote(index) {
+      if (confirm('Are you sure you want to delete this note?')) {
+        state.notes.splice(index, 1);
+        localStorage.setItem('learnify-notes', JSON.stringify(state.notes));
+        loadNotes();
+      }
+    }
 
-        if (isCorrect) {
-          state.correctCount++;
-          state.score += 10;
-        }
+    function viewNote(index) {
+      const note = state.notes[index];
+      $('note-editor-title').textContent = 'View Note';
+      $('note-title').value = note.title;
+      $('note-subject').value = note.subject;
+      $('note-content').value = note.content;
+      $('notes-list').classList.add('hidden');
+      $('note-editor-container').classList.remove('hidden');
+      $('ai-note-container').classList.add('hidden');
+      
+      $('note-title').readOnly = true;
+      $('note-subject').disabled = true;
+      $('note-content').readOnly = true;
+      $('save-note-btn').classList.add('hidden');
+    }
 
-        // Highlight answers
-        options.forEach(opt => {
-          if (opt.textContent === correct) {
-            opt.classList.add('correct');
-          } else if (opt.textContent === selected && !isCorrect) {
-            opt.classList.add('incorrect');
+    // AI NOTE GENERATION
+    function showAINoteMaker() {
+      $('notes-list').classList.add('hidden');
+      $('note-editor-container').classList.add('hidden');
+      $('ai-note-container').classList.remove('hidden');
+      $('ai-note-results').classList.add('hidden');
+      $('ai-note-loading').classList.add('hidden');
+    }
+
+    async function generateAINotes() {
+      const topic = $('ai-note-topic').value.trim();
+      const subject = $('ai-note-subject').value;
+      const level = $('ai-note-level').value;
+      
+      if (!topic || !subject) {
+        alert('Please enter a topic and select a subject.');
+        return;
+      }
+      
+      $('ai-note-loading').classList.remove('hidden');
+      
+      const systemPrompt = "You are an expert educator who can create comprehensive study notes on any topic.";
+      
+      const prompt = `
+Create comprehensive study notes on the following topic:
+
+Topic: "${topic}"
+Subject: "${subject}"
+Level: "${level}"
+
+Please structure the notes with:
+- Clear headings and subheadings
+- Key concepts and definitions
+- Important formulas or rules (if applicable)
+- Examples or applications
+- Summary of main points
+
+Format the response in a way that's easy to read and study from.
+      `;
+
+      const result = await askGPTForAI(prompt, systemPrompt);
+      
+      $('ai-note-loading').classList.add('hidden');
+      
+      if (result.success) {
+        $('ai-note-content').innerHTML = result.response.replace(/\n/g, '<br>');
+        $('ai-note-results').classList.remove('hidden');
+      } else {
+        alert(`Failed to generate notes: ${result.error}`);
+      }
+    }
+
+    function saveAINotes() {
+      const topic = $('ai-note-topic').value.trim();
+      const subject = $('ai-note-subject').value;
+      const content = $('ai-note-content').innerText;
+      
+      if (!topic || !subject || !content) {
+        alert('Please generate notes first.');
+        return;
+      }
+      
+      const note = {
+        title: `AI Notes: ${topic}`,
+        subject,
+        content,
+        date: new Date().toLocaleString()
+      };
+      
+      state.notes.unshift(note);
+      localStorage.setItem('learnify-notes', JSON.stringify(state.notes));
+      
+      alert('AI notes saved successfully!');
+      showPage('notes-page');
+    }
+
+    // FLASHCARDS MANAGEMENT
+    function loadFlashcards() {
+      const flashcardsList = $('flashcards-list');
+      const emptyFlashcards = $('empty-flashcards');
+      
+      if (state.flashcards.length === 0) {
+        flashcardsList.innerHTML = '';
+        emptyFlashcards.classList.remove('hidden');
+      } else {
+        emptyFlashcards.classList.add('hidden');
+        flashcardsList.innerHTML = '';
+        
+        const flashcardsBySubject = {};
+        state.flashcards.forEach(flashcard => {
+          if (!flashcardsBySubject[flashcard.subject]) {
+            flashcardsBySubject[flashcard.subject] = [];
           }
+          flashcardsBySubject[flashcard.subject].push(flashcard);
+        });
+        
+        Object.keys(flashcardsBySubject).forEach(subject => {
+          const subjectSection = document.createElement('div');
+          subjectSection.className = 'mb-4';
+          subjectSection.innerHTML = `
+            <h4 class="font-bold mb-2">${subject}</h4>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
+              ${flashcardsBySubject[subject].map((flashcard, index) => {
+                const globalIndex = state.flashcards.findIndex(f => f === flashcard);
+                return `
+                  <div class="flashcard-item card cursor-pointer p-3" data-index="${globalIndex}">
+                    <div class="font-bold">${flashcard.front}</div>
+                    <div class="text-sm text-gray-400 mt-1">${flashcard.back.substring(0, 50)}${flashcard.back.length > 50 ? '...' : ''}</div>
+                    <button class="delete-btn" data-index="${globalIndex}">
+                      <i class="fas fa-trash"></i>
+                    </button>
+                  </div>
+                `;
+              }).join('')}
+            </div>
+            <button class="study-subject-btn mt-2 bg-purple-600 text-white px-3 py-1 rounded text-sm" data-subject="${subject}">
+              Study ${subject} Flashcards
+            </button>
+          `;
+          flashcardsList.appendChild(subjectSection);
         });
 
-        // Save score
-        localStorage.setItem('mathQuizScore', state.score);
+        flashcardsList.querySelectorAll('.flashcard-item').forEach(card => {
+          card.addEventListener('click', function() {
+            const index = parseInt(this.getAttribute('data-index'));
+            viewFlashcard(index);
+          });
+        });
 
-        // Move to next question or summary
-        setTimeout(() => {
-          state.currentQuestionIndex++;
-          if (state.currentQuestionIndex < state.totalQuestions) {
-            loadQuestion();
-          } else {
-            showSummary();
+        flashcardsList.querySelectorAll('.delete-btn').forEach(button => {
+          button.addEventListener('click', function(e) {
+            e.stopPropagation();
+            const index = parseInt(this.getAttribute('data-index'));
+            deleteFlashcard(index);
+          });
+        });
+
+        flashcardsList.querySelectorAll('.study-subject-btn').forEach(button => {
+          button.addEventListener('click', function() {
+            const subject = this.getAttribute('data-subject');
+            studyFlashcards(subject);
+          });
+        });
+      }
+    }
+
+    function addNewFlashcard() {
+      $('flashcard-editor-title').textContent = 'New Flashcard';
+      $('flashcard-subject').value = '';
+      $('flashcard-front').value = '';
+      $('flashcard-back').value = '';
+      $('flashcards-list').classList.add('hidden');
+      $('flashcard-editor-container').classList.remove('hidden');
+      $('ai-flashcard-container').classList.add('hidden');
+      $('flashcard-study-container').classList.add('hidden');
+    }
+
+    function saveFlashcard() {
+      const subject = $('flashcard-subject').value;
+      const front = $('flashcard-front').value.trim();
+      const back = $('flashcard-back').value.trim();
+      
+      if (!subject || !front || !back) {
+        alert('Please fill in all fields.');
+        return;
+      }
+      
+      const flashcard = {
+        subject,
+        front,
+        back,
+        date: new Date().toLocaleString()
+      };
+      
+      state.flashcards.unshift(flashcard);
+      localStorage.setItem('learnify-flashcards', JSON.stringify(state.flashcards));
+      
+      $('flashcard-editor-container').classList.add('hidden');
+      $('flashcards-list').classList.remove('hidden');
+      loadFlashcards();
+    }
+
+    function deleteFlashcard(index) {
+      if (confirm('Are you sure you want to delete this flashcard?')) {
+        state.flashcards.splice(index, 1);
+        localStorage.setItem('learnify-flashcards', JSON.stringify(state.flashcards));
+        loadFlashcards();
+      }
+    }
+
+    function viewFlashcard(index) {
+      const flashcard = state.flashcards[index];
+      $('flashcard-editor-title').textContent = 'View Flashcard';
+      $('flashcard-subject').value = flashcard.subject;
+      $('flashcard-front').value = flashcard.front;
+      $('flashcard-back').value = flashcard.back;
+      $('flashcards-list').classList.add('hidden');
+      $('flashcard-editor-container').classList.remove('hidden');
+      $('ai-flashcard-container').classList.add('hidden');
+      $('flashcard-study-container').classList.add('hidden');
+      
+      $('flashcard-subject').disabled = true;
+      $('flashcard-front').readOnly = true;
+      $('flashcard-back').readOnly = true;
+      $('save-flashcard-btn').classList.add('hidden');
+    }
+
+    // AI FLASHCARD GENERATION
+    function showAIFlashcardMaker() {
+      $('flashcards-list').classList.add('hidden');
+      $('flashcard-editor-container').classList.add('hidden');
+      $('ai-flashcard-container').classList.remove('hidden');
+      $('ai-flashcard-results').classList.add('hidden');
+      $('ai-flashcard-loading').classList.add('hidden');
+      $('flashcard-study-container').classList.add('hidden');
+    }
+
+    async function generateAIFlashcards() {
+      const topic = $('ai-flashcard-topic').value.trim();
+      const subject = $('ai-flashcard-subject').value;
+      const count = parseInt($('ai-flashcard-count').value);
+      
+      if (!topic || !subject) {
+        alert('Please enter a topic and select a subject.');
+        return;
+      }
+      
+      $('ai-flashcard-loading').classList.remove('hidden');
+      
+      const systemPrompt = "You are an expert educator who can create effective flashcards for studying.";
+      
+      const prompt = `
+Create ${count} flashcards for studying the following topic:
+
+Topic: "${topic}"
+Subject: "${subject}"
+
+For each flashcard, provide:
+- A clear question or term on the front
+- A concise answer or definition on the back
+
+Format your response as a JSON array with objects containing "front" and "back" fields.
+
+Return ONLY the JSON array, no other text.
+      `;
+
+      const result = await askGPTForAI(prompt, systemPrompt);
+      
+      $('ai-flashcard-loading').classList.add('hidden');
+      
+      if (result.success) {
+        try {
+          let jsonString = result.response;
+          const codeBlockMatch = result.response.match(/```(?:json)?\s*([\s\S]*?)\s*```/i);
+          if (codeBlockMatch) jsonString = codeBlockMatch[1].trim();
+          else {
+            const jsonMatch = result.response.match(/\[[\s\S]*\]/);
+            if (jsonMatch) jsonString = jsonMatch[0];
+            else throw new Error('No valid JSON in response');
           }
-        }, 1200);
-      }
 
-      function generateQuestions(level) {
-        const questions = [];
-        for (let i = 0; i < state.totalQuestions; i++) {
-          let question, answer, options;
-
-          switch (level) {
-            case 'addition':
-              {
-                const a = random(1, 50);
-                const b = random(1, 50);
-                question = `${a} + ${b} = ?`;
-                answer = (a + b).toString();
-                options = generateDistractors(parseInt(answer), 'number');
-              }
-              break;
-
-            case 'subtraction':
-              {
-                const a = random(20, 100);
-                const b = random(1, a - 1);
-                question = `${a} - ${b} = ?`;
-                answer = (a - b).toString();
-                options = generateDistractors(parseInt(answer), 'number');
-              }
-              break;
-
-            case 'multiplication':
-              {
-                const a = random(1, 12);
-                const b = random(1, 12);
-                question = `${a} × ${b} = ?`;
-                answer = (a * b).toString();
-                options = generateDistractors(parseInt(answer), 'number');
-              }
-              break;
-
-            case 'division':
-              {
-                const b = random(1, 12);
-                const a = b * random(1, 12);
-                question = `${a} ÷ ${b} = ?`;
-                answer = (a / b).toString();
-                options = generateDistractors(parseInt(answer), 'number');
-              }
-              break;
-
-            case 'algebra':
-              {
-                const a = random(2, 10);
-                const b = random(1, 20);
-                const x = random(1, 10);
-                const result = a * x + b;
-                question = `${a}x + ${b} = ${result} → x = ?`;
-                answer = x.toString();
-                options = generateDistractors(x, 'number');
-              }
-              break;
-
-            default:
-              question = 'Error';
-              answer = '0';
-              options = ['1', '2', '3', '4'];
-          }
-
-          // Shuffle options
-          shuffleArray(options);
-
-          questions.push({ question, answer, options });
+          const flashcards = JSON.parse(jsonString);
+          displayAIFlashcards(flashcards);
+        } catch (err) {
+          console.error("Error parsing flashcards:", err);
+          alert("Failed to parse AI response. Please try again.");
         }
-        return questions;
+      } else {
+        alert(`Failed to generate flashcards: ${result.error}`);
       }
+    }
 
-      function generateDistractors(correct, type) {
-        const opts = [correct];
-        while (opts.length < 4) {
-          let wrong = type === 'number' ? correct + random(-5, 5) : correct;
-          if (wrong !== correct && !opts.includes(wrong)) {
-            opts.push(wrong);
-          }
-        }
-        return opts;
-      }
-
-      function shuffleArray(array) {
-        for (let i = array.length - 1; i > 0; i--) {
-          const j = Math.floor(Math.random() * (i + 1));
-          [array[i], array[j]] = [array[j], array[i]];
-        }
-      }
-
-      function random(min, max) {
-        return Math.floor(Math.random() * (max - min + 1)) + min;
-      }
-
-      function showSummary() {
-        $('#quiz-screen').style.display = 'none';
-
-        const summaryHTML = `
-          <div class="summary-modal">
-            <div class="summary-card">
-              <h2>Quiz Complete!</h2>
-              <p>Correct: ${state.correctCount} / ${state.totalQuestions}</p>
-              <p>You earned <strong>${state.correctCount * 10}</strong> points!</p>
-              <button class="btn btn-primary" id="retry-btn">Retry Level</button>
-              <button class="btn" id="back-home-btn">Back to Home</button>
+    function displayAIFlashcards(flashcards) {
+      const container = $('ai-flashcard-content');
+      container.innerHTML = '';
+      
+      flashcards.forEach((flashcard, index) => {
+        const flashcardElement = document.createElement('div');
+        flashcardElement.className = 'flashcard-item';
+        flashcardElement.innerHTML = `
+          <div class="flex">
+            <div class="w-1/2 pr-2">
+              <div class="font-bold text-sm mb-1">Front:</div>
+              <div>${flashcard.front}</div>
+            </div>
+            <div class="w-1/2 pl-2">
+              <div class="font-bold text-sm mb-1">Back:</div>
+              <div>${flashcard.back}</div>
             </div>
           </div>
         `;
+        container.appendChild(flashcardElement);
+      });
+      
+      $('ai-flashcard-results').classList.remove('hidden');
+    }
 
-        $('#summary-screen').innerHTML = summaryHTML;
-        $('#summary-screen').style.display = 'block';
-
-        $('#retry-btn').onclick = () => startQuiz(state.currentLevel);
-        $('#back-home-btn').onclick = () => showHomeScreen();
+    function saveAIFlashcards() {
+      const topic = $('ai-flashcard-topic').value.trim();
+      const subject = $('ai-flashcard-subject').value;
+      const flashcards = [];
+      
+      $('ai-flashcard-content').querySelectorAll('.flashcard-item').forEach(item => {
+        const front = item.querySelector('div:nth-child(1) div:nth-child(2)').textContent;
+        const back = item.querySelector('div:nth-child(2) div:nth-child(2)').textContent;
+        
+        flashcards.push({
+          subject,
+          front,
+          back,
+          date: new Date().toLocaleString()
+        });
+      });
+      
+      if (flashcards.length === 0) {
+        alert('No flashcards to save.');
+        return;
       }
+      
+      state.flashcards.unshift(...flashcards);
+      localStorage.setItem('learnify-flashcards', JSON.stringify(state.flashcards));
+      
+      alert(`${flashcards.length} AI flashcards saved successfully!`);
+      showPage('flashcards-page');
+    }
 
-      function startQuiz(level) {
-        state.currentLevel = level;
-        state.currentQuestionIndex = 0;
-        state.correctCount = 0;
-        state.questions = generateQuestions(level);
-        showQuizScreen();
+    // FLASHCARD STUDY MODE
+    function studyFlashcards(subject) {
+      state.currentFlashcardSet = state.flashcards.filter(f => f.subject === subject);
+      state.currentFlashcardIndex = 0;
+      
+      if (state.currentFlashcardSet.length === 0) {
+        alert('No flashcards found for this subject.');
+        return;
       }
+      
+      $('flashcards-list').classList.add('hidden');
+      $('flashcard-editor-container').classList.add('hidden');
+      $('ai-flashcard-container').classList.add('hidden');
+      $('flashcard-study-container').classList.remove('hidden');
+      
+      displayFlashcard();
+    }
 
-      function setupEventListeners() {
-        // Welcome screen
-        $('#continue-btn').onclick = () => {
-          const name = $('#name-input').value.trim();
-          if (!name) {
-            alert('Please enter your name!');
-            return;
-          }
-          state.user = name;
-          localStorage.setItem('mathQuizUser', name);
-          localStorage.setItem('mathQuizScore', '0');
-          showHomeScreen();
+    function displayFlashcard() {
+      const flashcard = state.currentFlashcardSet[state.currentFlashcardIndex];
+      $('flashcard-study-front').textContent = flashcard.front;
+      $('flashcard-study-back').textContent = flashcard.back;
+      $('flashcard-progress').textContent = `Card ${state.currentFlashcardIndex + 1} of ${state.currentFlashcardSet.length}`;
+      
+      $('study-flashcard').classList.remove('flipped');
+      
+      $('prev-flashcard-btn').classList.toggle('hidden', state.currentFlashcardIndex === 0);
+      $('next-flashcard-btn').classList.toggle('hidden', state.currentFlashcardIndex === state.currentFlashcardSet.length - 1);
+    }
+
+    // VIRTUAL LABS IMPLEMENTATION
+    function initializeVirtualLabs() {
+      document.querySelectorAll('.lab-card').forEach(card => {
+        card.addEventListener('click', function() {
+          const labId = this.getAttribute('data-lab');
+          startVirtualLab(labId);
+        });
+      });
+
+      $('reset-lab-btn').addEventListener('click', function() {
+        startVirtualLab(state.currentLab);
+      });
+    }
+
+    function startVirtualLab(labId) {
+      state.currentLab = labId;
+      
+      $('lab-container').classList.remove('hidden');
+      
+      let labTitle = '';
+      let labControls = '';
+      let labCanvas = '';
+      let labData = '';
+      
+      switch(labId) {
+        case 'physics-pendulum':
+          labTitle = 'Pendulum Lab';
+          labControls = `
+            <button class="lab-control" data-action="start">Start Swing</button>
+            <button class="lab-control" data-action="stop">Stop</button>
+            <button class="lab-control" data-action="increase-length">Increase Length</button>
+            <button class="lab-control" data-action="decrease-length">Decrease Length</button>
+          `;
+          labCanvas = `
+            <div class="pendulum-lab">
+              <div class="pendulum-string" style="height: 150px; width: 2px; background: #fff; margin: 0 auto; position: relative;">
+                <div class="pendulum-bob" style="width: 30px; height: 30px; background: #7c3aed; border-radius: 50%; position: absolute; bottom: -15px; left: -14px;"></div>
+              </div>
+              <div class="pendulum-base" style="width: 100px; height: 10px; background: #aaa; margin: 0 auto;"></div>
+            </div>
+          `;
+          labData = `
+            <div class="grid grid-cols-2 gap-4">
+              <div>Length: <span id="pendulum-length">1.0 m</span></div>
+              <div>Period: <span id="pendulum-period">2.0 s</span></div>
+              <div>Amplitude: <span id="pendulum-amplitude">30°</span></div>
+              <div>Gravity: <span id="pendulum-gravity">9.8 m/s²</span></div>
+            </div>
+          `;
+          break;
+          
+        case 'chemistry-reactions':
+          labTitle = 'Chemical Reactions Lab';
+          labControls = `
+            <button class="lab-control" data-action="add-naoh">Add NaOH</button>
+            <button class="lab-control" data-action="add-hcl">Add HCl</button>
+            <button class="lab-control" data-action="add-phenolphthalein">Add Indicator</button>
+            <button class="lab-control" data-action="reset">Reset</button>
+          `;
+          labCanvas = `
+            <div class="beaker" style="width: 200px; height: 150px; border: 2px solid #fff; border-bottom: none; margin: 0 auto; position: relative;">
+              <div id="beaker-content" style="width: 100%; height: 0%; background: transparent; position: absolute; bottom: 0; transition: all 0.5s;"></div>
+            </div>
+          `;
+          labData = `
+            <div class="grid grid-cols-2 gap-4">
+              <div>pH: <span id="beaker-ph">7.0</span></div>
+              <div>Color: <span id="beaker-color">Clear</span></div>
+              <div>Temperature: <span id="beaker-temp">25°C</span></div>
+              <div>Reaction: <span id="beaker-reaction">None</span></div>
+            </div>
+          `;
+          break;
+      }
+      
+      $('lab-title').textContent = labTitle;
+      $('lab-controls').innerHTML = labControls;
+      $('lab-canvas').innerHTML = labCanvas;
+      $('lab-data').innerHTML = labData;
+      
+      $('lab-controls').querySelectorAll('.lab-control').forEach(control => {
+        control.addEventListener('click', function() {
+          const action = this.getAttribute('data-action');
+          handleLabAction(action);
+        });
+      });
+    }
+
+    function handleLabAction(action) {
+      alert(`Lab action: ${action}`);
+    }
+
+    // LANGUAGE TOOLS IMPLEMENTATION - UPGRADED TO USE API
+    function initializeLanguageTools() {
+      // Helper to get language name from code
+      const getLangName = (code) => {
+        const map = {
+          'en': 'English', 'ne': 'Nepali', 'hi': 'Hindi', 'es': 'Spanish',
+          'fr': 'French', 'de': 'German', 'zh': 'Chinese', 'ja': 'Japanese'
         };
+        return map[code] || code;
+      };
 
-        // Level selection
-        $$('.level-card').forEach(card => {
-          card.onclick = () => {
-            const level = card.getAttribute('data-level');
-            startQuiz(level);
-          };
+      // TRANSLATION API CALL
+      $('translate-btn').addEventListener('click', async function() {
+        const text = $('translate-input').value.trim();
+        const fromLang = getLangName($('translate-from').value);
+        const toLang = getLangName($('translate-to').value);
+        
+        if (!text) {
+          alert('Please enter text to translate.');
+          return;
+        }
+
+        // Show loading state
+        const btn = $('translate-btn');
+        const originalText = btn.innerText;
+        btn.innerText = 'Translating...';
+        btn.disabled = true;
+        $('translate-result').classList.add('hidden');
+        
+        const systemPrompt = "You are a professional translator. Translate the text accurately, preserving the original tone and meaning.";
+        const prompt = `Translate the following text from ${fromLang} to ${toLang}:\n\n"${text}"\n\nProvide ONLY the translated text, no quotation marks or extra explanation.`;
+
+        const result = await askGPTForAI(prompt, systemPrompt);
+
+        // Reset button
+        btn.innerText = originalText;
+        btn.disabled = false;
+        
+        if (result.success) {
+          $('translated-text').textContent = result.response;
+          $('translate-result').classList.remove('hidden');
+        } else {
+          alert('Translation failed. Please try again.');
+        }
+      });
+      
+      // GRAMMAR CHECKER API CALL
+      $('check-grammar-btn').addEventListener('click', async function() {
+        const text = $('grammar-input').value.trim();
+        
+        if (!text) {
+          alert('Please enter text to check grammar.');
+          return;
+        }
+
+        // Show loading state
+        const btn = $('check-grammar-btn');
+        const originalText = btn.innerText;
+        btn.innerText = 'Checking...';
+        btn.disabled = true;
+        $('grammar-result').classList.add('hidden');
+        
+        const systemPrompt = "You are an expert English grammar checker.";
+        const prompt = `Check the grammar of the following text. If there are errors, correct them and return the corrected text. If the text is already correct, return the original text.\n\nText: "${text}"\n\nReturn ONLY the corrected text.`;
+        
+        const result = await askGPTForAI(prompt, systemPrompt);
+
+        // Reset button
+        btn.innerText = originalText;
+        btn.disabled = false;
+        
+        if (result.success) {
+          $('corrected-text').textContent = result.response;
+          $('grammar-result').classList.remove('hidden');
+        } else {
+           alert('Grammar check failed. Please try again.');
+        }
+      });
+    }
+
+    // SAVE HISTORY IMPLEMENTATION
+    function loadHistory() {
+      const historyList = $('history-list');
+      const emptyHistory = $('empty-history');
+      
+      if (state.savedHistory.length === 0) {
+        historyList.innerHTML = '';
+        emptyHistory.classList.remove('hidden');
+      } else {
+        emptyHistory.classList.add('hidden');
+        historyList.innerHTML = '';
+        
+        state.savedHistory.forEach((item, index) => {
+          const historyItem = document.createElement('div');
+          historyItem.className = 'history-item';
+          historyItem.innerHTML = `
+            <h4 class="font-bold">${item.question}</h4>
+            <div class="flex justify-between text-sm text-gray-400 mb-2">
+              <span>${item.subject}</span>
+              <span>${item.date}</span>
+            </div>
+            <p class="text-sm">${item.solution.substring(0, 100).replace(/<[^>]*>/g, '')}${item.solution.length > 100 ? '...' : ''}</p>
+            <button class="delete-btn" data-index="${index}"><i class="fas fa-trash"></i></button>
+          `;
+          historyList.appendChild(historyItem);
+        });
+
+        historyList.querySelectorAll('.delete-btn').forEach(button => {
+          button.addEventListener('click', function(e) {
+            e.stopPropagation();
+            const index = parseInt(this.getAttribute('data-index'));
+            deleteHistoryItem(index);
+          });
+        });
+
+        historyList.querySelectorAll('.history-item').forEach((item, index) => {
+          item.addEventListener('click', function() {
+            viewHistoryItem(index);
+          });
         });
       }
-    })();
+    }
+
+    function deleteHistoryItem(index) {
+      if (confirm('Are you sure you want to delete this item from history?')) {
+        state.savedHistory.splice(index, 1);
+        localStorage.setItem('learnify-saved', JSON.stringify(state.savedHistory));
+        loadHistory();
+      }
+    }
+
+    function viewHistoryItem(index) {
+      const item = state.savedHistory[index];
+      
+      $('question-display').textContent = item.question;
+      renderMarkdown($('solution-tab'), item.solution);
+      renderMarkdown($('explanation-tab'), item.explanation);
+      renderMarkdown($('resources-tab'), item.resources);
+      
+      document.querySelector('.tab-btn[data-tab="solution"]').click();
+      
+      showPage('results-page');
+      $('loading-container').classList.add('hidden');
+      $('results-container').classList.remove('hidden');
+    }
+
+    function clearHistory() {
+      if (confirm('Are you sure you want to clear all history? This action cannot be undone.')) {
+        state.savedHistory = [];
+        localStorage.setItem('learnify-saved', JSON.stringify(state.savedHistory));
+        loadHistory();
+      }
+    }
+
+    // AI FEATURES FUNCTIONS
+    async function askGPTForAI(prompt, systemPrompt = null, model = "openai/gpt-3.5-turbo") {
+      const messages = [];
+      
+      if (systemPrompt) {
+        messages.push({ role: "system", content: systemPrompt });
+      }
+      
+      messages.push({ role: "user", content: prompt });
+
+      try {
+        const res = await fetch(API_URL, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${API_KEY}`,
+            "HTTP-Referer": window.location.href,
+            "X-Title": "Learnify Pro"
+          },
+          body: JSON.stringify({
+            model: model,
+            messages: messages,
+            temperature: 0.7,
+            max_tokens: 1500
+          })
+        });
+
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error?.message || 'API request failed');
+        if (!data.choices?.[0]?.message?.content) return { success: false, error: 'No response from AI' };
+
+        const response = data.choices[0].message.content.trim();
+        return { success: true, response };
+      } catch (err) {
+        console.error("Error calling GPT:", err);
+        return { success: false, error: `API Error: ${err.message}` };
+      }
+    }
+
+    // AI Question Rewriter
+    async function generateQuestionRewrites() {
+      const question = $('rewriter-input').value.trim();
+      if (!question) {
+        alert('Please enter a question to rewrite.');
+        return;
+      }
+
+      $('rewriter-loading').classList.remove('hidden');
+      $('rewriter-results').classList.add('hidden');
+
+      const systemPrompt = "You are an expert educational content creator. Create variations of questions to help students practice the same concept in different ways.";
+      
+      const prompt = `
+Create 3 different variations of this question that test the same concept but are phrased differently:
+
+Original Question: "${question}"
+
+For each variation, provide:
+1. The rewritten question
+2. A brief note on what concept it's testing
+
+Format your response as a JSON array with objects containing "question" and "concept" fields.
+
+Return ONLY the JSON array, no other text.
+      `;
+
+      const result = await askGPTForAI(prompt, systemPrompt);
+      
+      $('rewriter-loading').classList.add('hidden');
+      
+      if (result.success) {
+        try {
+          let jsonString = result.response;
+          const codeBlockMatch = result.response.match(/```(?:json)?\s*([\s\S]*?)\s*```/i);
+          if (codeBlockMatch) jsonString = codeBlockMatch[1].trim();
+          else {
+            const jsonMatch = result.response.match(/\[[\s\S]*\]/);
+            if (jsonMatch) jsonString = jsonMatch[0];
+            else throw new Error('No valid JSON in response');
+          }
+
+          const variations = JSON.parse(jsonString);
+          displayQuestionRewrites(variations);
+        } catch (err) {
+          console.error("Error parsing question variations:", err);
+          alert("Failed to parse AI response. Please try again.");
+        }
+      } else {
+        alert(`Failed to generate question variations: ${result.error}`);
+      }
+    }
+
+    function displayQuestionRewrites(variations) {
+      const container = $('rewritten-questions');
+      container.innerHTML = '';
+      
+      variations.forEach((variation, index) => {
+        const variationCard = document.createElement('div');
+        variationCard.className = 'card';
+        variationCard.innerHTML = `
+          <h4 class="font-bold mb-2">Variation ${index + 1}</h4>
+          <p class="mb-2">${variation.question}</p>
+          <div class="text-sm text-gray-500">Concept: ${variation.concept}</div>
+        `;
+        container.appendChild(variationCard);
+      });
+      
+      $('rewriter-results').classList.remove('hidden');
+    }
+
+    // Notes to Quiz Converter
+    async function generateQuizFromNotes() {
+      const notes = $('notes-quiz-input').value.trim();
+      if (!notes) {
+        alert('Please enter notes to convert into a quiz.');
+        return;
+      }
+
+      $('notes-quiz-loading').classList.remove('hidden');
+      $('notes-quiz-results').classList.add('hidden');
+
+      const systemPrompt = "You are an expert educational content creator. Create multiple-choice quiz questions based on provided notes.";
+      
+      const prompt = `
+Create 5 multiple-choice quiz questions based on these notes:
+
+Notes: "${notes}"
+
+For each question, provide:
+1. The question text
+2. Four options (a, b, c, d)
+3. The correct answer (a, b, c, or d)
+4. A brief explanation
+
+Format your response as a JSON array with objects containing "question", "options" (array), "correct", and "explanation" fields.
+
+Return ONLY the JSON array, no other text.
+      `;
+
+      const result = await askGPTForAI(prompt, systemPrompt);
+      
+      $('notes-quiz-loading').classList.add('hidden');
+      
+      if (result.success) {
+        try {
+          let jsonString = result.response;
+          const codeBlockMatch = result.response.match(/```(?:json)?\s*([\s\S]*?)\s*```/i);
+          if (codeBlockMatch) jsonString = codeBlockMatch[1].trim();
+          else {
+            const jsonMatch = result.response.match(/\[[\s\S]*\]/);
+            if (jsonMatch) jsonString = jsonMatch[0];
+            else throw new Error('No valid JSON in response');
+          }
+
+          const quizQuestions = JSON.parse(jsonString);
+          displayQuizQuestions(quizQuestions);
+        } catch (err) {
+          console.error("Error parsing quiz questions:", err);
+          alert("Failed to parse AI response. Please try again.");
+        }
+      } else {
+        alert(`Failed to generate quiz questions: ${result.error}`);
+      }
+    }
+
+    function displayQuizQuestions(questions) {
+      const container = $('quiz-questions');
+      container.innerHTML = '';
+      
+      questions.forEach((q, index) => {
+        const questionCard = document.createElement('div');
+        questionCard.className = 'card';
+        questionCard.innerHTML = `
+          <h4 class="font-bold mb-3">Question ${index + 1}</h4>
+          <p class="mb-3">${q.question}</p>
+          <div class="space-y-2 mb-3">
+            ${q.options.map((option, i) => `
+              <div class="quiz-option ${String.fromCharCode(97 + i) === q.correct ? 'quiz-correct' : ''}">
+                <span class="font-bold">${String.fromCharCode(65 + i)}.</span> ${option}
+              </div>
+            `).join('')}
+          </div>
+          <div class="text-sm text-gray-500">
+            <strong>Explanation:</strong> ${q.explanation}
+          </div>
+        `;
+        container.appendChild(questionCard);
+      });
+      
+      $('notes-quiz-results').classList.remove('hidden');
+    }
+
+    // Explain Like I'm 5
+    async function generateSimpleExplanation() {
+      const concept = $('explain-simple-input').value.trim();
+      if (!concept) {
+        alert('Please enter a concept to explain simply.');
+        return;
+      }
+
+      $('explain-simple-loading').classList.remove('hidden');
+      $('explain-simple-results').classList.add('hidden');
+
+      const systemPrompt = "You are an expert educator who can explain complex concepts in simple, child-friendly language. Use analogies and simple terms that a 5-year-old would understand.";
+      
+      const prompt = `
+Explain this concept in simple terms that a 5-year-old would understand:
+
+Concept: "${concept}"
+
+Use:
+- Simple language
+- Fun analogies
+- Short sentences
+- Relatable examples
+
+Keep it under 200 words.
+      `;
+
+      const result = await askGPTForAI(prompt, systemPrompt);
+      
+      $('explain-simple-loading').classList.add('hidden');
+      
+      if (result.success) {
+        $('simple-explanation').textContent = result.response;
+        $('explain-simple-results').classList.remove('hidden');
+      } else {
+        alert(`Failed to generate simple explanation: ${result.error}`);
+      }
+    }
+
+    // Step-by-Step Visuals
+    async function generateStepByStep() {
+      const problem = $('step-by-step-input').value.trim();
+      if (!problem) {
+        alert('Please enter a problem or concept to break down.');
+        return;
+      }
+
+      $('step-by-step-loading').classList.remove('hidden');
+      $('step-by-step-results').classList.add('hidden');
+
+      const systemPrompt = "You are an expert educator who can break down complex problems into simple, step-by-step instructions. Use clear, concise language and include visual cues where helpful.";
+      
+      const prompt = `
+Break down this problem or concept into simple, numbered steps:
+
+Problem/Concept: "${problem}"
+
+For each step:
+- Provide a clear, concise instruction
+- Use simple language
+- Include a visual cue (emoji) if relevant
+
+Format your response as a JSON array with objects containing "step" and "emoji" fields.
+
+Return ONLY the JSON array, no other text.
+      `;
+
+      const result = await askGPTForAI(prompt, systemPrompt);
+      
+      $('step-by-step-loading').classList.add('hidden');
+      
+      if (result.success) {
+        try {
+          let jsonString = result.response;
+          const codeBlockMatch = result.response.match(/```(?:json)?\s*([\s\S]*?)\s*```/i);
+          if (codeBlockMatch) jsonString = codeBlockMatch[1].trim();
+          else {
+            const jsonMatch = result.response.match(/\[[\s\S]*\]/);
+            if (jsonMatch) jsonString = jsonMatch[0];
+            else throw new Error('No valid JSON in response');
+          }
+
+          const steps = JSON.parse(jsonString);
+          displayStepByStep(steps);
+        } catch (err) {
+          console.error("Error parsing steps:", err);
+          alert("Failed to parse AI response. Please try again.");
+        }
+      } else {
+        alert(`Failed to generate step-by-step breakdown: ${result.error}`);
+      }
+    }
+
+    function displayStepByStep(steps) {
+      const container = $('steps-container');
+      container.innerHTML = '';
+      
+      steps.forEach((step, index) => {
+        const stepElement = document.createElement('div');
+        stepElement.className = 'step-container';
+        stepElement.innerHTML = `
+          <div class="step-number">${index + 1}</div>
+          <div class="step-content card">
+            <div class="flex items-center mb-2">
+              <span class="text-2xl mr-2">${step.emoji || '📝'}</span>
+              <span class="font-medium">Step ${index + 1}</span>
+            </div>
+            <p>${step.step}</p>
+          </div>
+        `;
+        container.appendChild(stepElement);
+      });
+      
+      $('step-by-step-results').classList.remove('hidden');
+    }
+
+    // AI Study Planner
+    async function generateStudyPlan() {
+      const examDate = $('exam-date').value;
+      const topic = $('study-topic').value.trim();
+      const hoursPerDay = $('study-hours').value;
+      
+      if (!examDate || !topic) {
+        alert('Please enter both exam date and study topic.');
+        return;
+      }
+
+      $('study-planner-loading').classList.remove('hidden');
+      $('study-planner-results').classList.add('hidden');
+
+      const systemPrompt = "You are an expert educational planner who can create effective study schedules based on time available and topics to cover.";
+      
+      const prompt = `
+Create a study plan with the following details:
+- Exam date: ${examDate}
+- Topic to study: ${topic}
+- Study hours per day: ${hoursPerDay}
+
+Today's date is ${new Date().toISOString().split('T')[0]}.
+
+Create a daily study plan that covers all important aspects of the topic. Include:
+- Specific subtopics to study each day
+- Recommended study techniques
+- Review sessions
+- Practice tests
+
+Format your response as a JSON array with objects containing "day", "date", "topics", and "activities" fields.
+
+Return ONLY the JSON array, no other text.
+      `;
+
+      const result = await askGPTForAI(prompt, systemPrompt);
+      
+      $('study-planner-loading').classList.add('hidden');
+      
+      if (result.success) {
+        try {
+          let jsonString = result.response;
+          const codeBlockMatch = result.response.match(/```(?:json)?\s*([\s\S]*?)\s*```/i);
+          if (codeBlockMatch) jsonString = codeBlockMatch[1].trim();
+          else {
+            const jsonMatch = result.response.match(/\[[\s\S]*\]/);
+            if (jsonMatch) jsonString = jsonMatch[0];
+            else throw new Error('No valid JSON in response');
+          }
+
+          const studyPlan = JSON.parse(jsonString);
+          displayStudyPlan(studyPlan);
+        } catch (err) {
+          console.error("Error parsing study plan:", err);
+          alert("Failed to parse AI response. Please try again.");
+        }
+      } else {
+        alert(`Failed to generate study plan: ${result.error}`);
+      }
+    }
+
+    function displayStudyPlan(plan) {
+      const container = $('study-plan-container');
+      container.innerHTML = '';
+      
+      plan.forEach(day => {
+        const dayElement = document.createElement('div');
+        dayElement.className = 'study-plan-day';
+        dayElement.innerHTML = `
+          <div class="flex justify-between items-center mb-2">
+            <h4 class="font-bold">${day.day}</h4>
+            <span class="text-sm text-gray-500">${day.date}</span>
+          </div>
+          <div class="mb-2">
+            <strong>Topics:</strong> ${day.topics}
+          </div>
+          <div>
+            <strong>Activities:</strong> ${day.activities}
+          </div>
+        `;
+        container.appendChild(dayElement);
+      });
+      
+      $('study-planner-results').classList.remove('hidden');
+    }
+
+    // Definition to Drawing
+    async function generateDrawing() {
+      const concept = $('definition-input').value.trim();
+      if (!concept) {
+        alert('Please enter a concept to visualize.');
+        return;
+      }
+
+      $('definition-drawing-loading').classList.remove('hidden');
+      $('definition-drawing-results').classList.add('hidden');
+
+      const systemPrompt = "You are an expert educator who can create simple ASCII art representations of concepts and provide clear explanations.";
+      
+      const prompt = `
+Create a simple ASCII art representation and explanation for this concept:
+
+Concept: "${concept}"
+
+Provide:
+1. A simple ASCII art diagram that represents the concept (max 20 lines, max 50 characters wide)
+2. A brief explanation of how the ASCII art represents the concept
+
+Format your response as a JSON object with "ascii" and "explanation" fields.
+
+Return ONLY the JSON object, no other text.
+      `;
+
+      const result = await askGPTForAI(prompt, systemPrompt);
+      
+      $('definition-drawing-loading').classList.add('hidden');
+      
+      if (result.success) {
+        try {
+          let jsonString = result.response;
+          const codeBlockMatch = result.response.match(/```(?:json)?\s*([\s\S]*?)\s*```/i);
+          if (codeBlockMatch) jsonString = codeBlockMatch[1].trim();
+          else {
+            const jsonMatch = result.response.match(/\{[\s\S]*\}/);
+            if (jsonMatch) jsonString = jsonMatch[0];
+            else throw new Error('No valid JSON in response');
+          }
+
+          const drawing = JSON.parse(jsonString);
+          displayDrawing(drawing);
+        } catch (err) {
+          console.error("Error parsing drawing:", err);
+          alert("Failed to parse AI response. Please try again.");
+        }
+      } else {
+        alert(`Failed to generate visual representation: ${result.error}`);
+      }
+    }
+
+    function displayDrawing(drawing) {
+      $('drawing-container').textContent = drawing.ascii;
+      $('drawing-explanation').textContent = drawing.explanation;
+      $('definition-drawing-results').classList.remove('hidden');
+    }
+
+    // NEW: Formula Finder
+    async function generateFormulas() {
+      const concept = $('formula-input').value.trim();
+      if (!concept) {
+        alert('Please enter a concept to find formulas for.');
+        return;
+      }
+
+      $('formula-finder-loading').classList.remove('hidden');
+      $('formula-finder-results').classList.add('hidden');
+
+      const systemPrompt = "You are an expert in mathematics and science who can provide relevant formulas, units, and examples for any concept.";
+      
+      const prompt = `
+Find relevant formulas for this concept:
+
+Concept: "${concept}"
+
+For each formula, provide:
+1. The formula itself (using LaTeX notation for mathematical symbols)
+2. A clear description of what the formula calculates
+3. The units for each variable
+4. A simple example with numbers
+
+Format your response as a JSON array with objects containing "formula", "description", "variables", and "example" fields.
+
+Return ONLY the JSON array, no other text.
+      `;
+
+      const result = await askGPTForAI(prompt, systemPrompt);
+      
+      $('formula-finder-loading').classList.add('hidden');
+      
+      if (result.success) {
+        try {
+          let jsonString = result.response;
+          const codeBlockMatch = result.response.match(/```(?:json)?\s*([\s\S]*?)\s*```/i);
+          if (codeBlockMatch) jsonString = codeBlockMatch[1].trim();
+          else {
+            const jsonMatch = result.response.match(/\[[\s\S]*\]/);
+            if (jsonMatch) jsonString = jsonMatch[0];
+            else throw new Error('No valid JSON in response');
+          }
+
+          const formulas = JSON.parse(jsonString);
+          displayFormulas(formulas);
+        } catch (err) {
+          console.error("Error parsing formulas:", err);
+          alert("Failed to parse AI response. Please try again.");
+        }
+      } else {
+        alert(`Failed to find formulas: ${result.error}`);
+      }
+    }
+
+    function displayFormulas(formulas) {
+      const container = $('formulas-container');
+      container.innerHTML = '';
+      
+      formulas.forEach((formula, index) => {
+        const formulaCard = document.createElement('div');
+        formulaCard.className = 'card';
+        formulaCard.innerHTML = `
+          <h4 class="font-bold mb-3">Formula ${index + 1}</h4>
+          <div class="mb-3 text-xl font-mono text-center p-3 bg-slate-800 rounded">
+            ${formula.formula}
+          </div>
+          <div class="mb-2">
+            <strong>Description:</strong> ${formula.description}
+          </div>
+          <div class="mb-2">
+            <strong>Variables:</strong> ${formula.variables}
+          </div>
+          <div class="text-sm text-gray-400">
+            <strong>Example:</strong> ${formula.example}
+          </div>
+        `;
+        container.appendChild(formulaCard);
+      });
+      
+      $('formula-finder-results').classList.remove('hidden');
+    }
+
+    // NEW: Concept Explorer
+    async function exploreConcept() {
+      const concept = $('concept-input').value.trim();
+      if (!concept) {
+        alert('Please enter a concept to explore.');
+        return;
+      }
+
+      $('concept-explorer-loading').classList.remove('hidden');
+      $('concept-explorer-results').classList.add('hidden');
+
+      const systemPrompt = "You are an expert educator who can provide comprehensive explanations of concepts, including their connections to other concepts, real-world applications, and common misconceptions.";
+      
+      const prompt = `
+Provide a comprehensive exploration of this concept:
+
+Concept: "${concept}"
+
+Include:
+1. A clear definition
+2. Key characteristics or properties
+3. Related concepts and how they connect
+4. Real-world applications or examples
+5. Common misconceptions to avoid
+6. Study tips for mastering this concept
+
+Format your response as a JSON object with "definition", "characteristics", "relatedConcepts", "applications", "misconceptions", and "studyTips" fields.
+
+Return ONLY the JSON object, no other text.
+      `;
+
+      const result = await askGPTForAI(prompt, systemPrompt);
+      
+      $('concept-explorer-loading').classList.add('hidden');
+      
+      if (result.success) {
+        try {
+          let jsonString = result.response;
+          const codeBlockMatch = result.response.match(/```(?:json)?\s*([\s\S]*?)\s*```/i);
+          if (codeBlockMatch) jsonString = codeBlockMatch[1].trim();
+          else {
+            const jsonMatch = result.response.match(/\{[\s\S]*\}/);
+            if (jsonMatch) jsonString = jsonMatch[0];
+            else throw new Error('No valid JSON in response');
+          }
+
+          const conceptData = JSON.parse(jsonString);
+          displayConcept(conceptData);
+        } catch (err) {
+          console.error("Error parsing concept data:", err);
+          alert("Failed to parse AI response. Please try again.");
+        }
+      } else {
+        alert(`Failed to explore concept: ${result.error}`);
+      }
+    }
+
+    function displayConcept(conceptData) {
+      const container = $('concept-container');
+      container.innerHTML = '';
+      
+      const sections = [
+        { title: 'Definition', content: conceptData.definition },
+        { title: 'Key Characteristics', content: conceptData.characteristics },
+        { title: 'Related Concepts', content: conceptData.relatedConcepts },
+        { title: 'Real-World Applications', content: conceptData.applications },
+        { title: 'Common Misconceptions', content: conceptData.misconceptions },
+        { title: 'Study Tips', content: conceptData.studyTips }
+      ];
+      
+      sections.forEach(section => {
+        const sectionElement = document.createElement('div');
+        sectionElement.className = 'card';
+        sectionElement.innerHTML = `
+          <h4 class="font-bold mb-3">${section.title}</h4>
+          <div>${section.content}</div>
+        `;
+        container.appendChild(sectionElement);
+      });
+      
+      $('concept-explorer-results').classList.remove('hidden');
+    }
+
+    // Initialize the application
+    document.addEventListener('DOMContentLoaded', function() {
+      showPage('welcome-page');
+      
+      $('get-started-btn').addEventListener('click', function() {
+        showPage('dashboard-page');
+      });
+      
+      createClassChips();
+
+      // Initialize new features
+      initializePracticeTests();
+      initializeVirtualLabs();
+      initializeLanguageTools();
+
+      // Dashboard actions
+      document.querySelectorAll('[data-action]').forEach(button => {
+        button.addEventListener('click', function() {
+          const action = this.getAttribute('data-action');
+          
+          if (action === 'homework') {
+            showPage('subject-page');
+          } else if (action === 'practice') {
+            showPage('practice-page');
+          } else if (action === 'notes') {
+            showPage('notes-page');
+          } else if (action === 'flashcards') {
+            showPage('flashcards-page');
+          } else if (action === 'virtual-labs') {
+            showPage('virtual-labs-page');
+          } else if (action === 'language-tools') {
+            showPage('language-tools-page');
+          } else if (action === 'save-history') {
+            showPage('save-history-page');
+          }
+          // NEW AI ACTIONS
+          else if (action === 'ai-rewriter') {
+            showPage('ai-rewriter-page');
+          } else if (action === 'notes-to-quiz') {
+            showPage('notes-to-quiz-page');
+          } else if (action === 'explain-simple') {
+            showPage('explain-simple-page');
+          } else if (action === 'step-by-step') {
+            showPage('step-by-step-page');
+          } else if (action === 'study-planner') {
+            showPage('study-planner-page');
+          } else if (action === 'definition-drawing') {
+            showPage('definition-drawing-page');
+          }
+          // NEW ACTIONS
+          else if (action === 'formula-finder') {
+            showPage('formula-finder-page');
+          } else if (action === 'concept-explorer') {
+            showPage('concept-explorer-page');
+          }
+        });
+      });
+
+      // Notes functionality
+      $('add-note-btn').addEventListener('click', addNewNote);
+      $('ai-note-btn').addEventListener('click', showAINoteMaker);
+      $('save-note-btn').addEventListener('click', saveNote);
+      $('cancel-note-btn').addEventListener('click', function() {
+        $('note-editor-container').classList.add('hidden');
+        $('notes-list').classList.remove('hidden');
+        $('ai-note-container').classList.add('hidden');
+        
+        $('note-title').readOnly = false;
+        $('note-subject').disabled = false;
+        $('note-content').readOnly = false;
+        $('save-note-btn').classList.remove('hidden');
+      });
+      
+      $('generate-ai-note-btn').addEventListener('click', generateAINotes);
+      $('cancel-ai-note-btn').addEventListener('click', function() {
+        showPage('notes-page');
+      });
+      $('save-ai-note-btn').addEventListener('click', saveAINotes);
+
+      // Flashcards functionality
+      $('add-flashcard-btn').addEventListener('click', addNewFlashcard);
+      $('ai-flashcard-btn').addEventListener('click', showAIFlashcardMaker);
+      $('save-flashcard-btn').addEventListener('click', saveFlashcard);
+      $('cancel-flashcard-btn').addEventListener('click', function() {
+        $('flashcard-editor-container').classList.add('hidden');
+        $('flashcards-list').classList.remove('hidden');
+        $('ai-flashcard-container').classList.add('hidden');
+        $('flashcard-study-container').classList.add('hidden');
+        
+        $('flashcard-subject').disabled = false;
+        $('flashcard-front').readOnly = false;
+        $('flashcard-back').readOnly = false;
+        $('save-flashcard-btn').classList.remove('hidden');
+      });
+      
+      $('generate-ai-flashcards-btn').addEventListener('click', generateAIFlashcards);
+      $('cancel-ai-flashcard-btn').addEventListener('click', function() {
+        showPage('flashcards-page');
+      });
+      $('save-ai-flashcards-btn').addEventListener('click', saveAIFlashcards);
+
+      // Flashcard study functionality
+      $('study-flashcard').addEventListener('click', function() {
+        this.classList.toggle('flipped');
+      });
+      $('prev-flashcard-btn').addEventListener('click', function() {
+        if (state.currentFlashcardIndex > 0) {
+          state.currentFlashcardIndex--;
+          displayFlashcard();
+        }
+      });
+      $('next-flashcard-btn').addEventListener('click', function() {
+        if (state.currentFlashcardIndex < state.currentFlashcardSet.length - 1) {
+          state.currentFlashcardIndex++;
+          displayFlashcard();
+        } else {
+          showPage('flashcards-page');
+        }
+      });
+      $('mark-known-btn').addEventListener('click', function() {
+        alert('Marked as known! Moving to next card.');
+        if (state.currentFlashcardIndex < state.currentFlashcardSet.length - 1) {
+          state.currentFlashcardIndex++;
+          displayFlashcard();
+        } else {
+          showPage('flashcards-page');
+        }
+      });
+      $('mark-review-btn').addEventListener('click', function() {
+        alert('Marked for review! Moving to next card.');
+        if (state.currentFlashcardIndex < state.currentFlashcardSet.length - 1) {
+          state.currentFlashcardIndex++;
+          displayFlashcard();
+        } else {
+          showPage('flashcards-page');
+        }
+      });
+
+      // Save History functionality
+      $('clear-history-btn').addEventListener('click', clearHistory);
+
+      // HOMEWORK FLOW
+      document.querySelectorAll('.subject-card').forEach(card => {
+        card.addEventListener('click', function() {
+          document.querySelectorAll('.subject-card').forEach(c => c.classList.remove('active-selection'));
+          this.classList.add('active-selection');
+          state.selectedSubject = this.dataset.subject;
+          updateButtonStates();
+        });
+      });
+
+      $('continue-btn').addEventListener('click', function() {
+        if (state.selectedSubject && state.selectedClass) {
+          showPage('method-page');
+        }
+      });
+
+      document.querySelectorAll('.method-card').forEach(card => {
+        card.addEventListener('click', function() {
+          document.querySelectorAll('.method-card').forEach(c => c.classList.remove('active-selection'));
+          this.classList.add('active-selection');
+          state.selectedMethod = this.dataset.method;
+          updateButtonStates();
+        });
+      });
+
+      $('start-btn').addEventListener('click', function() {
+        if (!state.selectedMethod) return;
+
+        ['text-input-container', 'image-input-container', 'voice-input-container'].forEach(id => {
+          const el = $(id);
+          if (el) el.classList.add('hidden');
+        });
+
+        if (state.selectedMethod === 'Text') {
+          $('text-input-container').classList.remove('hidden');
+        } else if (state.selectedMethod === 'Image') {
+          $('image-input-container').classList.remove('hidden');
+          setupImageUpload(); // This is the key fix - calling the function
+        } else if (state.selectedMethod === 'Voice') {
+          $('voice-input-container').classList.remove('hidden');
+        }
+
+        showPage('question-page');
+      });
+
+      // Back button functionality
+      document.querySelectorAll('.back-btn').forEach(button => {
+        button.addEventListener('click', function() {
+          const targetPage = this.getAttribute('data-back');
+          if (targetPage) {
+            showPage(targetPage);
+          }
+        });
+      });
+
+      const questionText = $('question-text');
+      if (questionText) {
+        questionText.addEventListener('input', updateButtonStates);
+      }
+
+      const clearTextBtn = $('clear-text-btn');
+      if (clearTextBtn) {
+        clearTextBtn.addEventListener('click', function() {
+          if (questionText) questionText.value = '';
+          updateButtonStates();
+        });
+      }
+
+      const submitBtn = $('submit-btn');
+      if (submitBtn) {
+        submitBtn.addEventListener('click', async function() {
+          if (state.selectedMethod === 'Text') {
+            state.currentQuestion = questionText?.value.trim() || '';
+          }
+          
+          if (!state.currentQuestion && !state.questionImage) {
+            alert('Please enter a question or upload an image.');
+            return;
+          }
+
+          if ($('question-display')) {
+            $('question-display').textContent = state.currentQuestion || 'Image Question';
+          }
+          
+          showPage('results-page');
+          
+          if ($('loading-container')) {
+            $('loading-container').classList.remove('hidden');
+          }
+          if ($('results-container')) {
+            $('results-container').classList.add('hidden');
+          }
+
+          const result = await askGPT();
+          
+          if ($('loading-container')) {
+            $('loading-container').classList.add('hidden');
+          }
+          
+          if (result.success) {
+            renderMarkdown($('solution-tab'), result.solution);
+            renderMarkdown($('explanation-tab'), result.explanation);
+            renderMarkdown($('resources-tab'), result.resources);
+            if ($('results-container')) {
+              $('results-container').classList.remove('hidden');
+            }
+            document.querySelector('.tab-btn[data-tab="solution"]').click();
+          } else {
+            renderMarkdown($('solution-tab'), `❌ Error: ${result.error}`);
+            if ($('results-container')) {
+              $('results-container').classList.remove('hidden');
+            }
+          }
+        });
+      }
+
+      document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+          document.querySelectorAll('.tab-btn').forEach(b => {
+            b.classList.toggle('active', b === this);
+            b.classList.toggle('text-gray-500', b !== this);
+          });
+          
+          ['solution-tab', 'explanation-tab', 'resources-tab'].forEach(t => {
+            const tab = $(t);
+            if (tab) tab.classList.add('hidden');
+          });
+          
+          const tabId = this.dataset.tab + '-tab';
+          const selectedTab = $(tabId);
+          if (selectedTab) {
+            selectedTab.classList.remove('hidden');
+          }
+        });
+      });
+
+      const newQuestionBtn = $('new-question-btn');
+      if (newQuestionBtn) {
+        newQuestionBtn.addEventListener('click', function() {
+          state.currentQuestion = '';
+          state.questionImage = null;
+
+          if (questionText) questionText.value = '';
+          if ($('image-upload')) $('image-upload').value = '';
+          if ($('image-preview')) $('image-preview').classList.add('hidden');
+          if ($('preview-img')) $('preview-img').src = '';
+          
+          ['text-input-container', 'image-input-container', 'voice-input-container'].forEach(id => {
+            const el = $(id);
+            if (el) el.classList.add('hidden');
+          });
+          
+          if (state.selectedMethod === 'Text' && $('text-input-container')) {
+            $('text-input-container').classList.remove('hidden');
+          } else if (state.selectedMethod === 'Image' && $('image-input-container')) {
+            $('image-input-container').classList.remove('hidden');
+            setupImageUpload(); // Re-initialize image upload
+          } else if (state.selectedMethod === 'Voice' && $('voice-input-container')) {
+            $('voice-input-container').classList.remove('hidden');
+          }
+
+          showPage('question-page');
+        });
+      }
+
+      const saveSolutionBtn = $('save-solution-btn');
+      if (saveSolutionBtn) {
+        saveSolutionBtn.addEventListener('click', function() {
+          const savedItem = {
+            question: state.currentQuestion || 'Image Question',
+            subject: state.selectedSubject,
+            date: new Date().toLocaleString(),
+            solution: $('solution-tab')?.innerHTML || '',
+            explanation: $('explanation-tab')?.innerHTML || '',
+            resources: $('resources-tab')?.innerHTML || ''
+          };
+          state.savedHistory.unshift(savedItem);
+          localStorage.setItem('learnify-saved', JSON.stringify(state.savedHistory));
+          alert('✅ Solution saved!');
+        });
+      }
+
+      // Voice recording functionality (simulated)
+      const recordBtn = $('record-btn');
+      const recordingStatus = $('recording-status');
+      if (recordBtn && recordingStatus) {
+        recordBtn.addEventListener('click', function() {
+          if (recordBtn.textContent.includes('Start')) {
+            recordBtn.innerHTML = '⏹️ Stop Recording';
+            recordingStatus.classList.remove('hidden');
+            state.currentQuestion = "This is a simulated voice question. In a real implementation, this would be transcribed from audio.";
+            updateButtonStates();
+          } else {
+            recordBtn.innerHTML = '🔴 Start Recording';
+            recordingStatus.classList.add('hidden');
+            alert('Voice question recorded: "' + state.currentQuestion + '"');
+          }
+        });
+      }
+
+      // NEW AI FEATURES EVENT LISTENERS
+      $('generate-rewrites-btn').addEventListener('click', generateQuestionRewrites);
+      $('clear-rewriter-btn').addEventListener('click', function() {
+        $('rewriter-input').value = '';
+        $('rewriter-results').classList.add('hidden');
+      });
+      
+      $('generate-quiz-btn').addEventListener('click', generateQuizFromNotes);
+      $('clear-notes-quiz-btn').addEventListener('click', function() {
+        $('notes-quiz-input').value = '';
+        $('notes-quiz-results').classList.add('hidden');
+      });
+      
+      $('generate-explanation-btn').addEventListener('click', generateSimpleExplanation);
+      $('clear-explain-btn').addEventListener('click', function() {
+        $('explain-simple-input').value = '';
+        $('explain-simple-results').classList.add('hidden');
+      });
+      
+      $('generate-steps-btn').addEventListener('click', generateStepByStep);
+      $('clear-steps-btn').addEventListener('click', function() {
+        $('step-by-step-input').value = '';
+        $('step-by-step-results').classList.add('hidden');
+      });
+      
+      $('generate-plan-btn').addEventListener('click', generateStudyPlan);
+      
+      $('generate-drawing-btn').addEventListener('click', generateDrawing);
+      $('clear-definition-btn').addEventListener('click', function() {
+        $('definition-input').value = '';
+        $('definition-drawing-results').classList.add('hidden');
+      });
+      
+      // NEW FEATURES EVENT LISTENERS
+      $('generate-formulas-btn').addEventListener('click', generateFormulas);
+      $('clear-formula-btn').addEventListener('click', function() {
+        $('formula-input').value = '';
+        $('formula-finder-results').classList.add('hidden');
+      });
+      
+      $('explore-concept-btn').addEventListener('click', exploreConcept);
+      $('clear-concept-btn').addEventListener('click', function() {
+        $('concept-input').value = '';
+        $('concept-explorer-results').classList.add('hidden');
+      });
+    });
+
+    // Theme toggle functionality
+    $('theme-toggle').addEventListener('click', function() {
+      document.documentElement.classList.toggle('dark');
+      const isDark = document.documentElement.classList.contains('dark');
+      localStorage.setItem('theme', isDark ? 'dark' : 'light');
+      const icon = $('theme-icon');
+      icon.innerHTML = isDark ?
+        `<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />` :
+        `<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />`;
+    });
   </script>
 </body>
+`<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />` :
+        `<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />`;
+    });
+<script
+  async="async"
+  data-cfasync="false"
+  src="//pl28230476.effectivegatecpm.com/024fba3a2625d9576077f0f0bbad79df/invoke.js"
+></script>
+<div id="container-024fba3a2625d9576077f0f0bbad79df"></div>
+<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-8096201347220853"
+     crossorigin="anonymous">
+  </script>
 </html>
+
+
